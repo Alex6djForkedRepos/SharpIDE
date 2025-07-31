@@ -1,7 +1,8 @@
-﻿using Microsoft.Build.Locator;
+using Microsoft.Build.Locator;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 using Photino.Blazor;
+using SharpIDE.Photino.Services;
 
 namespace SharpIDE.Photino;
 
@@ -12,8 +13,9 @@ public class Program
 	{
 		var appBuilder = PhotinoBlazorAppBuilder.CreateDefault(args);
 
-		appBuilder.Services.AddLogging();
+		appBuilder.Services.AddLogging();//
 		appBuilder.Services.AddMudServices();
+		appBuilder.Services.AddSingleton<RefreshOpenFileService>();
 
 		appBuilder.RootComponents.Add<App>("app");
 
@@ -27,6 +29,12 @@ public class Program
 			//.SetIconFile("favicon.ico")
 			.SetTitle("SharpIDE.Photino");
 
+		app.MainWindow.WindowFocusInHandler += (sender, _) =>
+		{
+			var refreshOpenFileService = app.Services.GetRequiredService<RefreshOpenFileService>();
+			refreshOpenFileService.InvokeRefreshOpenFile();
+		};
+
 		AppDomain.CurrentDomain.UnhandledException += (sender, error) =>
 		{
 			app.MainWindow.ShowMessage("Fatal exception", error.ExceptionObject.ToString());
@@ -38,4 +46,3 @@ public class Program
 		app.Run();
 	}
 }
-

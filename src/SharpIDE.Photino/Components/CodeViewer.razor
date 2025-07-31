@@ -1,4 +1,8 @@
-﻿<MudText>
+﻿@using SharpIDE.Photino.Services
+
+@inject RefreshOpenFileService RefreshOpenFileService
+
+<MudText>
 	@Path.GetFileName(FilePath)
 	@if (_unsavedEdits)
 	{
@@ -10,14 +14,19 @@
 		height: calc(100vh - 100px);
 	}
 </style>
-<StandaloneCodeEditor Id="my-editor-id" ConstructionOptions="@EditorConstructionOptions" OnDidChangeModelContent="evnt => _unsavedEdits = true" OnDidBlurEditorText="@SaveFileToDisk" />
+@{
+}
+<StandaloneCodeEditor @ref="_codeEditorRef" Id="my-editor-id" ConstructionOptions="@EditorConstructionOptions" OnDidChangeModelContent="IfDirtyMarkDirty" OnDidBlurEditorText="@SaveFileToDisk" />
 
 @code {
 	[Parameter, EditorRequired]
     public string FilePath { get; set; } = null!;
 
 	private string? _fileContent;
+	private string? _unsavedFileContent;
 	private bool _unsavedEdits = false;
+
+	StandaloneCodeEditor _codeEditorRef = null!;
 
 	private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
 	{
@@ -33,6 +42,20 @@
 	}
 
 	protected override async Task OnInitializedAsync()
+	{
+		await ReadFile();
+		RefreshOpenFileService.RefreshOpenFile += async () =>
+		{
+			Console.WriteLine("RefreshOpenFileService.RefreshOpenFile called");
+			await ReadFile();
+			var model = await _codeEditorRef.GetModel();
+			ArgumentNullException.ThrowIfNull(model);
+			await model.SetValue(_fileContent);
+			StateHasChanged();
+		};
+	}
+
+	private async Task ReadFile()
 	{
 		var fileInfo = new FileInfo(FilePath);
 		if (!fileInfo.Exists)
@@ -53,7 +76,20 @@
 		ArgumentNullException.ThrowIfNull(editor, nameof(editor));
 		var editorTextValue = await editor.GetValue();
 		await File.WriteAllTextAsync(FilePath, editorTextValue);
+		_fileContent = editorTextValue;
 		_unsavedEdits = false;
 	}
 
+	private async Task IfDirtyMarkDirty()
+	{
+		// Probably quite non-performant
+		if (await _codeEditorRef.GetValue() != _fileContent)
+		{
+			_unsavedEdits = true;
+		}
+		else
+		{
+			_unsavedEdits = false;
+		}
+	}
 }

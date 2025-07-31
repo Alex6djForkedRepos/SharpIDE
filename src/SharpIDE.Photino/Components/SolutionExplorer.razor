@@ -58,7 +58,6 @@
 
 	private void LoadSolution(string solutionPath)
 	{
-		return;
 		var solutionFile = GetNodesInSolution.ParseSolutionFileFromPath(solutionPath);
 		ArgumentNullException.ThrowIfNull(solutionFile);
 		_solutionFile = solutionFile;
