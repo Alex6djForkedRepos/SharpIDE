@@ -16,6 +16,7 @@ public enum BuildType
 }
 public class BuildService
 {
+	public event Func<Task> BuildStarted = () => Task.CompletedTask;
 	public Channel<string> BuildOutputChannel { get; } = Channel.CreateUnbounded<string>();
 	public async Task MsBuildSolutionAsync(string solutionFilePath, BuildType buildType = BuildType.Build)
 	{
@@ -24,7 +25,7 @@ public class BuildService
 			Loggers =
 			[
 				//new BinaryLogger { Parameters = "msbuild.binlog" },
-				new ConsoleLogger(LoggerVerbosity.Normal, message => BuildOutputChannel.Writer.TryWrite(message), s => { }, () => { }),
+				new ConsoleLogger(LoggerVerbosity.Minimal, message => BuildOutputChannel.Writer.TryWrite(message), s => { }, () => { }),
 				//new InMemoryLogger(LoggerVerbosity.Normal)
 			],
 		};
@@ -46,6 +47,7 @@ public class BuildService
 
 		await Task.Run(async () =>
 		{
+			await BuildStarted.Invoke();
 			var buildCompleteTcs = new TaskCompletionSource<BuildResult>();
 			BuildManager.DefaultBuildManager.BeginBuild(buildParameters);
 			var buildResult2 = BuildManager.DefaultBuildManager.PendBuildRequest(buildRequest);
