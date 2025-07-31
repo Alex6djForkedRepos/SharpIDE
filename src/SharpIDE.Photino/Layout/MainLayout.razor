@@ -1,21 +1,25 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider Theme="@AppThemeProvider.GetTheme()" IsDarkMode="true" />
-<MudPopoverProvider/>
-<MudDialogProvider/>
-<MudSnackbarProvider/>
+@inject IDialogService DialogService
 
 <MudLayout>
 	<MudAppBar Dense="true">
 		<MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
 	</MudAppBar>
 	<MudDrawer @bind-Open="@_drawerOpen" Width="400px" ClipMode="DrawerClipMode.Always">
-		<SolutionExplorer />
+		@if (_solutionFilePath is not null)
+		{
+			<SolutionExplorer SolutionFilePath="@_solutionFilePath"/>
+		}
 		@* <NavMenu/> *@
 	</MudDrawer>
 	<MudMainContent>
 		<MudContainer MaxWidth="MaxWidth.False" Class="mt-2">
-			@Body
+			@* @Body *@
+			@if (_solutionFilePath is not null)
+			{
+				<CodeViewer FilePath="C:\Users\matth\Documents\Git\SharpIDE.Photino\src\SharpIDE.Photino\Program.cs" />
+			}
 		</MudContainer>
 	</MudMainContent>
 </MudLayout>
@@ -26,5 +30,17 @@
 	void DrawerToggle()
 	{
 		_drawerOpen = !_drawerOpen;
+	}
+
+	private string? _solutionFilePath;
+
+	protected override async Task OnInitializedAsync()
+	{
+		var dialogRef = await DialogService.ShowAsync<SolutionPickerDialog>("Open Solution", new DialogOptions { FullWidth = true, MaxWidth = MaxWidth.Medium });
+		var result = await dialogRef.Result;
+		if (result is null) throw new InvalidOperationException("Dialog result is null");
+		if (result.Canceled) throw new OperationCanceledException("Dialog was canceled");
+		var solutionFilePath = (string)result.Data!;
+		_solutionFilePath = solutionFilePath;
 	}
 }

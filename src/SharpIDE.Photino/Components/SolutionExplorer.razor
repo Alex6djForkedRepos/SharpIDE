@@ -1,4 +1,5 @@
-﻿@using Microsoft.Build.Construction
+﻿@using Ardalis.GuardClauses
+@using Microsoft.Build.Construction
 @using SharpIDE.Application.Features.SolutionDiscovery
 
 @if (_solutionFile is null)
@@ -15,6 +16,8 @@
 
 
 @code {
+	[Parameter, EditorRequired]
+    public string SolutionFilePath { get; set; } = null!;
 
 	private SolutionFile _solutionFile = null!;
 	private List<ProjectInSolution> _rootNodes = [];
@@ -53,7 +56,8 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		await Task.Run(() => LoadSolution("C:/Users/matth/Documents/Git/SharpIDE.Photino/SharpIDE.Photino.sln"));
+		Guard.Against.NullOrWhiteSpace(SolutionFilePath);
+		await Task.Run(() => LoadSolution(SolutionFilePath));
 	}
 
 	private void LoadSolution(string solutionPath)
