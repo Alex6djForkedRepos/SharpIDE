@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using System.Threading.Channels;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
@@ -17,18 +18,26 @@ public enum BuildType
 public class BuildService
 {
 	public event Func<Task> BuildStarted = () => Task.CompletedTask;
-	public Channel<string> BuildOutputChannel { get; } = Channel.CreateUnbounded<string>();
+	public ChannelTextWriter BuildTextWriter { get; } = new ChannelTextWriter();
 	public async Task MsBuildSolutionAsync(string solutionFilePath, BuildType buildType = BuildType.Build)
 	{
+		var normalOut = Console.Out;
+		Console.SetOut(BuildTextWriter);
+		var terminalLogger = InternalTerminalLoggerFactory.CreateLogger();
+		terminalLogger.Parameters = "FORCECONSOLECOLOR";
+		terminalLogger.Verbosity = LoggerVerbosity.Minimal;
 		var buildParameters = new BuildParameters
 		{
 			Loggers =
 			[
 				//new BinaryLogger { Parameters = "msbuild.binlog" },
-				new ConsoleLogger(LoggerVerbosity.Minimal, message => BuildOutputChannel.Writer.TryWrite(message), s => { }, () => { }),
+				//new ConsoleLogger(LoggerVerbosity.Minimal, message => BuildOutputChannel.Writer.TryWrite(message), s => { }, () => { }) {Parameters = "FORCECONSOLECOLOR"},
+				terminalLogger
 				//new InMemoryLogger(LoggerVerbosity.Normal)
 			],
 		};
+		Console.SetOut(normalOut);
+
 		string[] targetsToBuild = buildType switch
 		{
 			BuildType.Build => ["Restore", "Build"],

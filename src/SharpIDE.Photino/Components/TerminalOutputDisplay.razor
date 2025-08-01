@@ -1,35 +1,45 @@
 ﻿@using SharpIDE.Application.Features.Build
+@using XtermBlazor
 
 @inject BuildService BuildService
 @inject IJSRuntime JsRuntime
 
 @implements IDisposable
 
-<div @ref="_logContainer" style="height: 15rem; overflow-y: auto; padding: 1rem; background-color: #303030; border: 1px solid #ccc;">
-	@foreach (var line in _outputLines)
-	{
-		<MudText Typo="Typo.body2">@line</MudText>
-	}
+<div style="width: 100%">
+	<Xterm @ref="@_terminalRef" Options="@_options" />
 </div>
 
 @code {
 	private List<string> _outputLines = [];
 	private ElementReference _logContainer;
 
+	private Xterm _terminalRef;
+
+	private TerminalOptions _options = new TerminalOptions
+	{
+		CursorBlink = true,
+		CursorStyle = CursorStyle.Bar,
+		Columns = 140,
+		Theme =
+		{
+			Background = "#303030",
+		},
+	};
+
 	protected override async Task OnInitializedAsync()
 	{
 		BuildService.BuildStarted += ClearPreviousOutput;
-		await foreach (var logLine in BuildService.BuildOutputChannel.Reader.ReadAllAsync())
+		await foreach (var logLine in BuildService.BuildTextWriter.ConsoleChannel.Reader.ReadAllAsync())
 		{
-			_outputLines.Add(logLine);
-			await InvokeAsync(StateHasChanged);
-			await ScrollToBottomAsync();
+			await _terminalRef.Write(logLine);
 		}
 	}
 
 	private async Task ClearPreviousOutput()
 	{
 		_outputLines.Clear();
+		await _terminalRef.Clear();
 		await InvokeAsync(StateHasChanged);
 	}
 
