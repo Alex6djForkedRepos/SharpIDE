@@ -4,6 +4,11 @@
 @inject BuildService BuildService
 
 @implements IDisposable
+<style>
+	.xterm-underline-5.xterm-underline-5 { /* Specificity hack lol */
+		text-decoration: dotted underline;
+	}
+</style>
 
 <div style="width: 100%">
 	<Xterm @ref="@_terminalRef" Options="@_options" />
