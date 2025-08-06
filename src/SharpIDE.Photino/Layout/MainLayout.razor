@@ -47,7 +47,7 @@
 				<MudStack AlignItems="AlignItems.Center" Spacing="1" Style="padding: 4px; height: 100%">
 					<SidebarIconButton Icon="@Icons.Material.Filled.FolderOpen" Text="Explorer" />
 					<MudSpacer />
-					<SidebarIconButton Icon="@Icons.Material.Filled.PlayArrow" Text="Run" />
+					<SidebarIconButton Icon="@Icons.Material.Filled.PlayArrow" Text="Run" OnClick="@RunDrawerToggle" />
 					<SidebarIconButton Icon="@Icons.Material.Filled.Terminal" Text="Terminal" />
 				</MudStack>
 			</MudPaper>
@@ -85,8 +85,10 @@
 @code {
 	private bool _drawerOpen = true;
 	private bool _terminalDrawerOpen = false;
+	private bool _runDrawerOpen = true;
 	private void DrawerToggle() => _drawerOpen = !_drawerOpen;
 	private void TerminalDrawerToggle() => _terminalDrawerOpen = !_terminalDrawerOpen;
+	private void RunDrawerToggle() => _runDrawerOpen = !_runDrawerOpen;
 
 	private string? _solutionFilePath;
 	private SharpIdeSolutionModel? _solutionModel;
