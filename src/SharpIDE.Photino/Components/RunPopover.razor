@@ -1,14 +1,19 @@
 ﻿@using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence
 
-<div @onmouseover="@(() => _open = true)" @onmouseleave="@(() => _open = false)">
-	<MudPopover Open="@_open" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterRight">
-		<div class="">
-			<MudPaper Class="pa-2">
-				@foreach(var projects in SolutionModel.AllProjects)
-				{
-					<MudText>@projects.Name</MudText>
-				}
-			</MudPaper>
+<div @onmouseover="@(() => _open = true)">
+	<MudPopover Duration="100" OverflowBehavior="OverflowBehavior.FlipNever" Open="@_open" AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.TopRight">
+		<div @onmouseleave="@(() => _open = false)">
+			<MudStack Justify="Justify.FlexEnd" AlignItems="AlignItems.End">
+				<MudButton Disabled="true" Style="min-width: 20px;">
+					<MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Medium" Color="Color.Default"/>
+				</MudButton>
+				<MudPaper Class="pa-2">
+					@foreach (var projects in SolutionModel.AllProjects)
+					{
+						<MudText>@projects.Name</MudText>
+					}
+				</MudPaper>
+			</MudStack>
 		</div>
 	</MudPopover>
 
