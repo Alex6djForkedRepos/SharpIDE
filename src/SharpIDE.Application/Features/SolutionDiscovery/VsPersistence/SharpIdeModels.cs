@@ -35,6 +35,6 @@ public class SharpIdeProjectModel : ISharpIdeNode
 		? MsBuildEvaluationProjectTask.Result
 		: throw new InvalidOperationException("Do not attempt to access the MsBuildEvaluationProject before it has been loaded");
 
-	public bool IsRunnable => MsBuildEvaluationProject.GetPropertyValue("OutputType") is "Exe" or "WinExe";
+	public bool IsRunnable => MsBuildEvaluationProject.Xml.Sdk is "Microsoft.NET.Sdk.BlazorWebAssembly" || MsBuildEvaluationProject.GetPropertyValue("OutputType") is "Exe" or "WinExe";
 	public bool OpenInRunPanel { get; set; }
 }

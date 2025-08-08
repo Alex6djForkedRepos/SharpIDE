@@ -50,7 +50,7 @@
 	[Parameter, EditorRequired]
 	public SharpIdeSolutionModel SolutionModel { get; set; } = null!;
 
-	private IEnumerable<SharpIdeProjectModel> RunnableProjects => SolutionModel.AllProjects.Where(p => p.MsBuildEvaluationProject.GetPropertyValue("OutputType") is "Exe" or "WinExe");
+	private IEnumerable<SharpIdeProjectModel> RunnableProjects => SolutionModel.AllProjects.Where(p => p.IsRunnable);
 
 	private bool _open = false;
 	private bool _ready = false;
