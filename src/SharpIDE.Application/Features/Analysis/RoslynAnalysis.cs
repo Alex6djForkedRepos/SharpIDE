@@ -7,13 +7,28 @@ namespace SharpIDE.Application.Features.Analysis;
 
 public static class RoslynAnalysis
 {
+	private static MSBuildWorkspace? _workspace;
+	public static void StartSolutionAnalysis(string solutionFilePath)
+	{
+		_ = Task.Run(async () =>
+		{
+			try
+			{
+				await Analyse(solutionFilePath);
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine($"RoslynAnalysis: Error during analysis: {e}");
+			}
+		});
+	}
 	public static async Task Analyse(string solutionFilePath)
 	{
 		Console.WriteLine($"RoslynAnalysis: Loading solution");
 		var timer = Stopwatch.StartNew();
-		var workspace = MSBuildWorkspace.Create();
-		workspace.WorkspaceFailed += (o, e) => throw new InvalidOperationException($"Workspace failed: {e.Diagnostic.Message}");
-		var solution = await workspace.OpenSolutionAsync(solutionFilePath, new Progress());
+		_workspace ??= MSBuildWorkspace.Create();
+		_workspace.WorkspaceFailed += (o, e) => throw new InvalidOperationException($"Workspace failed: {e.Diagnostic.Message}");
+		var solution = await _workspace.OpenSolutionAsync(solutionFilePath, new Progress());
 		timer.Stop();
 		Console.WriteLine($"RoslynAnalysis: Solution loaded in {timer.ElapsedMilliseconds}ms");
 		Console.WriteLine();
