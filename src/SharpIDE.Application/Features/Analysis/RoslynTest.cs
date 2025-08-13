@@ -11,7 +11,7 @@ public static class RoslynTest
 	{
 		var workspace = MSBuildWorkspace.Create();
 		var timer = Stopwatch.StartNew();
-		workspace.WorkspaceFailed += (o, e) => Console.WriteLine(e.Diagnostic.Message);
+		workspace.WorkspaceFailed += (o, e) => throw new InvalidOperationException($"Workspace failed: {e.Diagnostic.Message}");
 		var solution = await workspace.OpenSolutionAsync(solutionFilePath, new Progress());
 		timer.Stop();
 		Console.WriteLine($"RoslynTest: Solution loaded in {timer.ElapsedMilliseconds}ms");
