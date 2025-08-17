@@ -43,7 +43,7 @@ public static class RoslynAnalysis
 			// is this hostServices necessary? test without it - just getting providers from assemblies instead
 			var host = MefHostServices.Create(MefHostServices.DefaultAssemblies);
 			_workspace ??= MSBuildWorkspace.Create(host);
-			_workspace.WorkspaceFailed += (o, e) => throw new InvalidOperationException($"Workspace failed: {e.Diagnostic.Message}");
+			_workspace.RegisterWorkspaceFailedHandler(o => throw new InvalidOperationException($"Workspace failed: {o.Diagnostic.Message}"));
 		}
 		var solution = await _workspace.OpenSolutionAsync(solutionFilePath, new Progress());
 		timer.Stop();
