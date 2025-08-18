@@ -45,7 +45,31 @@ public partial class SharpIdeCodeEdit : CodeEdit
 			_currentLine = GetCaretLine();
 			GD.Print($"Selection changed to line {_currentLine}, start {_selectionStartCol}, end {_selectionEndCol}");
 		};
+		TextChanged += OnTextChanged;
 		this.SyntaxHighlighter = _syntaxHighlighter;
+	}
+
+	private void OnTextChanged()
+	{
+		// update the MSBuildWorkspace
+		RoslynAnalysis.UpdateDocument(_currentFile, Text);
+		_ = Task.Run(async () =>
+		{
+			try
+			{
+				var syntaxHighlighting = await RoslynAnalysis.GetDocumentSyntaxHighlighting(_currentFile);
+				var diagnostics = await RoslynAnalysis.GetDocumentDiagnostics(_currentFile);
+				Callable.From(() =>
+				{
+					SetSyntaxHighlightingModel(syntaxHighlighting);
+					SetDiagnosticsModel(diagnostics);
+				}).CallDeferred();
+			}
+			catch (Exception ex)
+			{
+				GD.PrintErr($"Error Calling OnTextChanged: {ex.Message}");
+			}
+		});
 	}
 
 	private void OnCodeFixSelected(long id)

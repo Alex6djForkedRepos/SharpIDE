@@ -288,4 +288,19 @@ public static class RoslynAnalysis
 			// }
 		}
 	}
+
+	// TODO: Use AdhocWorkspace or something else, to avoid writing to disk on every change
+	public static void UpdateDocument(SharpIdeFile fileModel, string newContent)
+	{
+		Guard.Against.Null(fileModel, nameof(fileModel));
+		Guard.Against.NullOrEmpty(newContent, nameof(newContent));
+
+		var project = _workspace!.CurrentSolution.Projects.Single(s => s.FilePath == ((IChildSharpIdeNode)fileModel).GetNearestProjectNode()!.FilePath);
+		var document = project.Documents.Single(s => s.FilePath == fileModel.Path);
+		Guard.Against.Null(document, nameof(document));
+
+		//var updatedDocument = document.WithText(SourceText.From(newContent));
+		var newSolution = _workspace.CurrentSolution.WithDocumentText(document.Id, SourceText.From(newContent));
+		_workspace.TryApplyChanges(newSolution);
+	}
 }

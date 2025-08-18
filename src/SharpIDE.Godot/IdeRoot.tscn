@@ -59,6 +59,7 @@ highlight_current_line = true
 gutters_draw_line_numbers = true
 code_completion_enabled = true
 auto_brace_completion_enabled = true
+auto_brace_completion_highlight_matching = true
 script = ExtResource("2_qjf5e")
 
 [node name="CodeFixesMenu" type="PopupMenu" parent="VBoxContainer/HBoxContainer/HSplitContainer/SharpIdeCodeEdit"]
