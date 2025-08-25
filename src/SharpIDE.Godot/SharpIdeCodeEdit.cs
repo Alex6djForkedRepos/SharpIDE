@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.Text;
 using SharpIDE.Application.Features.Analysis;
 using SharpIDE.Application.Features.Debugging;
+using SharpIDE.Application.Features.Events;
 using SharpIDE.Application.Features.SolutionDiscovery;
 using Task = System.Threading.Tasks.Task;
 
@@ -36,7 +37,6 @@ public partial class SharpIdeCodeEdit : CodeEdit
 	
 	public override void _Ready()
 	{
-		
 		SyntaxHighlighter = _syntaxHighlighter;
 		_popupMenu = GetNode<PopupMenu>("CodeFixesMenu");
 		_popupMenu.IdPressed += OnCodeFixSelected;
@@ -48,6 +48,20 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		SymbolHovered += OnSymbolHovered;
 		SymbolValidate += OnSymbolValidate;
 		SymbolLookup += OnSymbolLookup;
+		GlobalEvents.DebuggerExecutionStopped += OnDebuggerExecutionStopped;
+	}
+
+	private async Task OnDebuggerExecutionStopped(string filePath, int line)
+	{
+		if (filePath != _currentFile.Path) return; // TODO: handle file switching
+		var lineInt = line - 1; // Debugging is 1-indexed, Godot is 0-indexed
+		Guard.Against.Negative(lineInt, nameof(lineInt));
+		
+		await this.InvokeAsync(() =>
+		{
+			SetLineBackgroundColor(lineInt, new Color("665001"));
+			SetLineAsExecuting(lineInt, true);
+		});
 	}
 
 	private void OnBreakpointToggled(long line)

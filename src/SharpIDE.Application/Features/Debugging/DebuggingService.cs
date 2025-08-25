@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using Ardalis.GuardClauses;
 using Microsoft.Diagnostics.NETCore.Client;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
@@ -6,6 +7,7 @@ using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 using Newtonsoft.Json.Linq;
 using SharpIDE.Application.Features.Debugging.Experimental;
 using SharpIDE.Application.Features.Debugging.Experimental.VsDbg;
+using SharpIDE.Application.Features.Events;
 using SharpIDE.Application.Features.SolutionDiscovery;
 
 namespace SharpIDE.Application.Features.Debugging;
@@ -22,8 +24,8 @@ public class DebuggingService
 		{
 			StartInfo = new ProcessStartInfo
 			{
-				FileName = @"C:\Users\Matthew\Downloads\netcoredbg-win64\netcoredbg\netcoredbg.exe",
-				//FileName = @"C:\Users\Matthew\.vscode-insiders\extensions\ms-dotnettools.csharp-2.83.5-win32-x64\.debugger\x86_64\vsdbg.exe",
+				//FileName = @"C:\Users\Matthew\Downloads\netcoredbg-win64\netcoredbg\netcoredbg.exe",
+				FileName = @"C:\Users\Matthew\.vscode-insiders\extensions\ms-dotnettools.csharp-2.83.5-win32-x64\.debugger\x86_64\vsdbg.exe",
 				Arguments = "--interpreter=vscode",
 				RedirectStandardInput = true,
 				RedirectStandardOutput = true,
@@ -64,6 +66,13 @@ public class DebuggingService
 		debugProtocolHost.RegisterEventType<StoppedEvent>(async void (@event) =>
 		{
 			await Task.CompletedTask.ConfigureAwait(ConfigureAwaitOptions.ForceYielding); // The VS Code Debug Protocol throws if you try to send a request from the dispatcher thread
+			//Dictionary<string, JToken>? test = @event.AdditionalProperties;
+			var prop = @event.GetType().GetProperty("AdditionalProperties", BindingFlags.NonPublic | BindingFlags.Instance);
+			// source, line, column
+			var dict = prop?.GetValue(@event) as Dictionary<string, JToken>;
+			var filePath = dict?["source"]?["path"]!.Value<string>()!;
+			var line = (dict?["line"]?.Value<int>()!).Value;
+			GlobalEvents.InvokeDebuggerExecutionStopped(filePath, line);
 			if (@event.Reason is StoppedEvent.ReasonValue.Exception)
 			{
 				Console.WriteLine("Stopped due to exception, continuing");

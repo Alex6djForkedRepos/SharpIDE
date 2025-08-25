@@ -1,4 +1,6 @@
-﻿using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
+﻿using SharpIDE.Application.Features.Debugging;
+using SharpIDE.Application.Features.SolutionDiscovery;
+using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
 
 namespace SharpIDE.Application.Features.Events;
 
@@ -15,4 +17,7 @@ public static class GlobalEvents
 
 	public static event Func<SharpIdeProjectModel, Task> ProjectStoppedRunning = _ => Task.CompletedTask;
 	public static void InvokeProjectStoppedRunning(SharpIdeProjectModel project) => ProjectStoppedRunning?.Invoke(project);
+
+	public static event Func<string, int, Task> DebuggerExecutionStopped = (_, _) => Task.CompletedTask;
+	public static void InvokeDebuggerExecutionStopped(string filePath, int line) => DebuggerExecutionStopped?.Invoke(filePath, line);
 }
