@@ -25,7 +25,7 @@ public class DebuggingService
 			StartInfo = new ProcessStartInfo
 			{
 				//FileName = @"C:\Users\Matthew\Downloads\netcoredbg-win64\netcoredbg\netcoredbg.exe",
-				FileName = @"C:\Users\Matthew\.vscode-insiders\extensions\ms-dotnettools.csharp-2.83.5-win32-x64\.debugger\x86_64\vsdbg.exe",
+				FileName = @"C:\Users\Matthew\.vscode-insiders\extensions\ms-dotnettools.csharp-2.90.51-win32-x64\.debugger\x86_64\vsdbg.exe",
 				Arguments = "--interpreter=vscode",
 				RedirectStandardInput = true,
 				RedirectStandardOutput = true,
