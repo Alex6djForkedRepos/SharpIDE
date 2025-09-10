@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using Ardalis.GuardClauses;
 using Godot;
 using Microsoft.CodeAnalysis;
@@ -15,7 +10,6 @@ using SharpIDE.Application.Features.Debugging;
 using SharpIDE.Application.Features.Events;
 using SharpIDE.Application.Features.SolutionDiscovery;
 using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
-using SharpIDE.Godot.Features.Run;
 using Task = System.Threading.Tasks.Task;
 
 namespace SharpIDE.Godot;
