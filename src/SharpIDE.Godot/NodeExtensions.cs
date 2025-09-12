@@ -8,28 +8,28 @@ namespace SharpIDE.Godot;
 
 public static class ControlExtensions
 {
-    extension(Control control)
-    {
-        public void BindChildren(ObservableHashSet<SharpIdeProjectModel> list, PackedScene scene)
-        {
-            var view = list.CreateView(x =>
-            {
-                var node = scene.Instantiate<ProblemsPanelProjectEntry>();
-                node.Project = x;
-                Callable.From(() => control.AddChild(node)).CallDeferred();
-                return node;
-            });
-            view.ViewChanged += OnViewChanged;
-        }
-        private static void OnViewChanged(in SynchronizedViewChangedEventArgs<SharpIdeProjectModel, ProblemsPanelProjectEntry> eventArgs)
-        {
-            GD.Print("View changed: " + eventArgs.Action);
-            if (eventArgs.Action == NotifyCollectionChangedAction.Remove)
-            {
-                eventArgs.OldItem.View.QueueFree();
-            }
-        }
-    }
+    // extension(Control control)
+    // {
+    //     public void BindChildren(ObservableHashSet<SharpIdeProjectModel> list, PackedScene scene)
+    //     {
+    //         var view = list.CreateView(x =>
+    //         {
+    //             var node = scene.Instantiate<ProblemsPanelProjectEntry>();
+    //             node.Project = x;
+    //             Callable.From(() => control.AddChild(node)).CallDeferred();
+    //             return node;
+    //         });
+    //         view.ViewChanged += OnViewChanged;
+    //     }
+    //     private static void OnViewChanged(in SynchronizedViewChangedEventArgs<SharpIdeProjectModel, ProblemsPanelProjectEntry> eventArgs)
+    //     {
+    //         GD.Print("View changed: " + eventArgs.Action);
+    //         if (eventArgs.Action == NotifyCollectionChangedAction.Remove)
+    //         {
+    //             eventArgs.OldItem.View.QueueFree();
+    //         }
+    //     }
+    // }
 }
 
 public static class NodeExtensions
