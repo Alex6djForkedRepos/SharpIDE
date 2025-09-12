@@ -7,7 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://cqt30ma6xgder" path="res://Features/SolutionExplorer/Resources/Csproj.svg" id="5_r1qfc"]
 [ext_resource type="Texture2D" uid="uid://btlxqx3c08fjj" path="res://Features/SolutionExplorer/Resources/SlnIcon.svg" id="6_idvpu"]
 
-[node name="SolutionExplorerPanel" type="Panel"]
+[node name="SolutionExplorerPanel" type="MarginContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -21,12 +21,7 @@ CsprojIcon = ExtResource("5_r1qfc")
 SlnIcon = ExtResource("6_idvpu")
 
 [node name="Tree" type="Tree" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 theme_override_constants/v_separation = 1
 theme_override_constants/inner_item_margin_left = 2
 theme_override_constants/draw_guides = 0

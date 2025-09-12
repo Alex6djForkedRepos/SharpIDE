@@ -5,7 +5,7 @@ using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
 
 namespace SharpIDE.Godot.Features.SolutionExplorer;
 
-public partial class SolutionExplorerPanel : Panel
+public partial class SolutionExplorerPanel : MarginContainer
 {
 	[Signal]
 	public delegate void FileSelectedEventHandler(SharpIdeFileGodotContainer file);
