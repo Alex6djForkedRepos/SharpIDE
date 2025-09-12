@@ -1,5 +1,6 @@
 ﻿using System.Collections.Specialized;
 using Godot;
+using Microsoft.CodeAnalysis;
 using ObservableCollections;
 using R3;
 using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
@@ -41,37 +42,39 @@ public partial class ProblemsPanel : Control
         {
             var treeItem = _tree.CreateItem(_rootItem);
             treeItem.SetText(0, x.Name);
-            var projectDiagnosticsView = x.Diagnostics.CreateView(y =>
-            {
-                return new TreeItemContainer();
-            });
-            var test = projectDiagnosticsView.ObserveChanged()
-                .SubscribeAwait(async (e, ct) =>
+            var projectDiagnosticsView = x.Diagnostics.CreateView(y => new TreeItemContainer());
+            var disposable = projectDiagnosticsView.ObserveChanged()
+                .SubscribeAwait(async (e, ct) => await (e.Action switch
                 {
-                    if (e.Action is NotifyCollectionChangedAction.Add)
-                    {
-                        await this.InvokeAsync(() =>
-                        {
-                            var diagItem = _tree.CreateItem(treeItem);
-                            diagItem.SetText(0, e.NewItem.Value.GetMessage());
-                            e.NewItem.View.Value = diagItem;
-                        });
-                    }
-                    if (e.Action is NotifyCollectionChangedAction.Remove)
-                    {
-                        await this.InvokeAsync(() =>
-                        {
-                            e.OldItem.View.Value?.Free();
-                        });
-                    }
-                });
+                    NotifyCollectionChangedAction.Add => CreateDiagnosticTreeItem(_tree, treeItem, e),
+                    NotifyCollectionChangedAction.Remove => FreeDiagnosticTreeItem(e),
+                    _ => Task.CompletedTask
+                }));
             Observable.EveryValueChanged(x, s => s.Diagnostics.Count)
                 .Subscribe(s => treeItem.Visible = s is not 0);
             return treeItem;
         });
         view.ViewChanged += OnViewChanged;
     }
-    
+
+    private async Task FreeDiagnosticTreeItem(ViewChangedEvent<Diagnostic, TreeItemContainer> e)
+    {
+        await this.InvokeAsync(() =>
+        {
+            e.OldItem.View.Value?.Free();
+        });
+    }
+
+    private async Task CreateDiagnosticTreeItem(Tree tree, TreeItem parent, ViewChangedEvent<Diagnostic, TreeItemContainer> e)
+    {
+        await this.InvokeAsync(() =>
+        {
+            var diagItem = tree.CreateItem(parent);
+            diagItem.SetText(0, e.NewItem.Value.GetMessage());
+            e.NewItem.View.Value = diagItem;
+        });
+    }
+
     private static void OnViewChanged(in SynchronizedViewChangedEventArgs<SharpIdeProjectModel, TreeItem> eventArgs)
     {
         GD.Print("View changed: " + eventArgs.Action);
