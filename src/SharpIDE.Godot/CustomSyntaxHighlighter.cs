@@ -57,7 +57,7 @@ public partial class CustomHighlighter : SyntaxHighlighter
             
             var highlightInfo = new Dictionary
             {
-                { ColorStringName, GetColorForRazorSpanKind(razorSpan.Kind, razorSpan.CodeClassificationType) }
+                { ColorStringName, GetColorForRazorSpanKind(razorSpan.Kind, razorSpan.CodeClassificationType, razorSpan.VsSemanticRangeType) }
             };
 
             highlights[columnIndex] = highlightInfo;
@@ -66,17 +66,34 @@ public partial class CustomHighlighter : SyntaxHighlighter
         return highlights;
     }
     
-    private static Color GetColorForRazorSpanKind(SharpIdeRazorSpanKind kind, string? codeClassificationType)
+    private static Color GetColorForRazorSpanKind(SharpIdeRazorSpanKind kind, string? codeClassificationType, string? vsSemanticRangeType)
     {
         return kind switch
         {
             SharpIdeRazorSpanKind.Code => GetColorForClassification(codeClassificationType!),
             SharpIdeRazorSpanKind.Comment => new Color("57a64a"), // green
             SharpIdeRazorSpanKind.MetaCode => new Color("a699e6"), // purple
-            SharpIdeRazorSpanKind.Markup => new Color("0b7f7f"), // dark green
+            SharpIdeRazorSpanKind.Markup => GetColorForMarkupSpanKind(vsSemanticRangeType),
             SharpIdeRazorSpanKind.Transition => new Color("a699e6"), // purple
             SharpIdeRazorSpanKind.None => new Color("dcdcdc"),
             _ => new Color("dcdcdc")
+        };
+    }
+    
+    private static Color GetColorForMarkupSpanKind(string? vsSemanticRangeType)
+    {
+        return vsSemanticRangeType switch
+        {
+            "razorDirective" or "razorTransition" => new Color("a699e6"), // purple
+            "markupTagDelimiter" => new Color("808080"), // gray
+            "markupTextLiteral" => new Color("dcdcdc"), // white
+            "markupElement" => new Color("569cd6"), // blue
+            "razorComponentElement" => new Color("0b7f7f"), // dark green
+            "razorComponentAttribute" => new Color("dcdcdc"), // white
+            "razorComment" or "razorCommentStar" or "razorCommentTransition" => new Color("57a64a"), // green
+            "markupOperator" =>new Color("dcdcdc"), // white
+            "markupAttributeQuote" => new Color("dcdcdc"), // white
+            _ => new Color("dcdcdc") // default to white
         };
     }
 

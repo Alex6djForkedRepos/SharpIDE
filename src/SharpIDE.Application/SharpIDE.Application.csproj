@@ -8,10 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-
     <IgnoresAccessChecksTo Include="Microsoft.CodeAnalysis.Remote.Razor" />
-<!--    <IgnoresAccessChecksTo Include="Microsoft.CodeAnalysis.Razor.Workspaces" />-->
+    <IgnoresAccessChecksTo Include="Microsoft.CodeAnalysis.Razor.Workspaces" />
     <IgnoresAccessChecksTo Include="Microsoft.CodeAnalysis.Razor.Compiler" />
+    <IgnoresAccessChecksTo Include="Microsoft.VisualStudioCode.RazorExtension" />
+    <IgnoresAccessChecksTo Include="Microsoft.CodeAnalysis.LanguageServer.Protocol" />
+    <IgnoresAccessChecksTo Include="Microsoft.CodeAnalysis.ExternalAccess.Razor.Features" />
+    <IgnoresAccessChecksTo Include="Microsoft.CodeAnalysis.Razor.SemanticTokens" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +35,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" />
 <!--    <PackageReference Include="Microsoft.VisualStudioCode.RazorExtension" />--> <!-- Either this or Microsoft.CodeAnalysis.Remote.Razor supplies RemoteSnapshotManager -->
     <PackageReference Include="Microsoft.CodeAnalysis.Remote.Razor" />
+    <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.Razor.Features" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
     <PackageReference Include="Microsoft.CodeAnalysis.Features" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" PrivateAssets="all" />

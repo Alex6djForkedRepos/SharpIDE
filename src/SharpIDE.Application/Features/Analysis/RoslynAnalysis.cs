@@ -2,20 +2,26 @@
 using System.Composition.Hosting;
 using System.Diagnostics;
 using Ardalis.GuardClauses;
+using Microsoft.AspNetCore.Razor.Language;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Classification;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.CodeAnalysis.Razor.SemanticTokens;
 using Microsoft.CodeAnalysis.Remote.Razor.ProjectSystem;
+using Microsoft.CodeAnalysis.Remote.Razor.SemanticTokens;
 using Microsoft.CodeAnalysis.Text;
 using NuGet.Packaging;
 using SharpIDE.Application.Features.SolutionDiscovery;
 using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
 using SharpIDE.RazorAccess;
+using CodeAction = Microsoft.CodeAnalysis.CodeActions.CodeAction;
+using CompletionList = Microsoft.CodeAnalysis.Completion.CompletionList;
+using Diagnostic = Microsoft.CodeAnalysis.Diagnostic;
+using DiagnosticSeverity = Microsoft.CodeAnalysis.DiagnosticSeverity;
 
 namespace SharpIDE.Application.Features.Analysis;
 
@@ -23,6 +29,7 @@ public static class RoslynAnalysis
 {
 	public static MSBuildWorkspace? _workspace;
 	private static RemoteSnapshotManager? _snapshotManager;
+	private static RemoteSemanticTokensLegendService? _semanticTokensLegendService;
 	private static SharpIdeSolutionModel? _sharpIdeSolutionModel;
 	private static HashSet<CodeFixProvider> _codeFixProviders = [];
 	private static HashSet<CodeRefactoringProvider> _codeRefactoringProviders = [];
@@ -58,8 +65,12 @@ public static class RoslynAnalysis
 			var host = MefHostServices.Create(container);
 			_workspace = MSBuildWorkspace.Create(host);
 			_workspace.RegisterWorkspaceFailedHandler(o => throw new InvalidOperationException($"Workspace failed: {o.Diagnostic.Message}"));
+
 			var snapshotManager = container.GetExports<RemoteSnapshotManager>().FirstOrDefault();
 			_snapshotManager = snapshotManager;
+
+			_semanticTokensLegendService = container.GetExports<RemoteSemanticTokensLegendService>().FirstOrDefault();
+			_semanticTokensLegendService!.SetLegend(TokenTypeProvider.ConstructTokenTypes(false), TokenTypeProvider.ConstructTokenModifiers());
 		}
 		var solution = await _workspace.OpenSolutionAsync(_sharpIdeSolutionModel.FilePath, new Progress());
 		timer.Stop();
@@ -188,7 +199,49 @@ public static class RoslynAnalysis
 
 		var razorText = await razorDocument.GetTextAsync(cancellationToken);
 
+		List<string> relevantTypes = ["razorDirective", "razorTransition", "markupTextLiteral", "markupTagDelimiter", "markupElement", "razorComponentElement", "razorComponentAttribute", "razorComment", "razorCommentTransition", "razorCommentStar", "markupOperator", "markupAttributeQuote"];
+		var ranges = new List<SemanticRange>();
+		CustomSemanticTokensVisitor.AddSemanticRanges(ranges, razorCodeDocument, generatedDocSyntaxRoot!.FullSpan, _semanticTokensLegendService!, false);
+		var relevantRanges = ranges.Select(s =>
+		{
+			var kind = _semanticTokensLegendService!.TokenTypes.All[s.Kind];
+			return new TranslatedSemanticRange { Range = s, Kind = kind };
+		}).Where(s => relevantTypes.Contains(s.Kind)).ToList();
+
+		//var allTypes = ranges.Select(s => _semanticTokensLegendService!.TokenTypes.All[s.Kind]).Distinct().ToList();
+		var semanticRangeRazorSpans = relevantRanges.Select(s =>
+		{
+			var linePositionSpan = s.Range.AsLinePositionSpan();
+			var textSpan = razorText.GetTextSpan(linePositionSpan);
+			var sourceSpan = new SourceSpan(
+				fileModel.Path,
+				textSpan.Start,
+				linePositionSpan.Start.Line,
+				linePositionSpan.Start.Character,
+				textSpan.Length,
+				1,
+				linePositionSpan.End.Character
+			);
+
+			return new SharpIdeRazorClassifiedSpan(sourceSpan.ToSharpIdeSourceSpan(), SharpIdeRazorSpanKind.Markup, null, s.Kind);
+		}).ToList();
+
+		// var debugMappedBackTranslatedSemanticRanges = relevantRanges.Select(s =>
+		// {
+		// 	var textSpan = razorText.GetTextSpan(s.Range.AsLinePositionSpan());
+		// 	var text = razorText.GetSubTextString(textSpan);
+		// 	return new { text, s };
+		// }).ToList();
+		// var semanticRangesAsRazorClassifiedSpans = ranges
+		// 	.Select(s =>
+		// 	{
+		// 		var sourceSpan = new SharpIdeRazorSourceSpan(null, s.)
+		// 		var span = new SharpIdeRazorClassifiedSpan();
+		// 		return span;
+		// 	}).ToList();
+		//var test = _semanticTokensLegendService.TokenTypes.All;
 		var (razorSpans, sourceMappings) = RazorAccessors.GetSpansAndMappingsForRazorCodeDocument(razorCodeDocument, razorCSharpDocument);
+		List<SharpIdeRazorClassifiedSpan> sharpIdeRazorSpans = [];
 
 		var classifiedSpans = await Classifier.GetClassifiedSpansAsync(generatedDocument, generatedDocSyntaxRoot!.FullSpan, cancellationToken);
 		var roslynMappedSpans = classifiedSpans.Select(s =>
@@ -220,14 +273,15 @@ public static class RoslynAnalysis
 			return null;
 		}).Where(s => s is not null).ToList();
 
-		razorSpans = [
-			..razorSpans.Where(s => s.Kind is not SharpIdeRazorSpanKind.Code),
-			..roslynMappedSpans.Select(s => new SharpIdeRazorClassifiedSpan(s!.SourceSpanInRazor, SharpIdeRazorSpanKind.Code, s.CsharpClassificationType))
+		sharpIdeRazorSpans = [
+			..sharpIdeRazorSpans.Where(s => s.Kind is not SharpIdeRazorSpanKind.Code),
+			..roslynMappedSpans.Select(s => new SharpIdeRazorClassifiedSpan(s!.SourceSpanInRazor, SharpIdeRazorSpanKind.Code, s.CsharpClassificationType)),
+			..semanticRangeRazorSpans
 		];
-		razorSpans = razorSpans.OrderBy(s => s.Span.AbsoluteIndex).ToImmutableArray();
+		sharpIdeRazorSpans = sharpIdeRazorSpans.OrderBy(s => s.Span.AbsoluteIndex).ToList();
 		timer.Stop();
 		Console.WriteLine($"RoslynAnalysis: Razor syntax highlighting for {fileModel.Name} took {timer.ElapsedMilliseconds}ms");
-		return razorSpans;
+		return sharpIdeRazorSpans;
 	}
 
 	public static async Task<IEnumerable<(FileLinePositionSpan fileSpan, ClassifiedSpan classifiedSpan)>> GetDocumentSyntaxHighlighting(SharpIdeFile fileModel)

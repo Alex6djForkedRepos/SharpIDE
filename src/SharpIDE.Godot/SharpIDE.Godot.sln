@@ -16,6 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\..\nuget.config = ..\..\nuget.config
 		..\..\README.md = ..\..\README.md
 		..\..\Directory.Packages.props = ..\..\Directory.Packages.props
+		..\..\.globalconfig = ..\..\.globalconfig
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpIDE.RazorAccess", "..\SharpIDE.RazorAccess\SharpIDE.RazorAccess.csproj", "{614547C3-6620-4F37-B0A9-AA78A4293EB4}"

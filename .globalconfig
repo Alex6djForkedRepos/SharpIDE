@@ -1,0 +1,20 @@
+﻿# Roslyn.Diagnostics.Analyzers
+dotnet_analyzer_diagnostic.category-ApiDesign.severity = none
+dotnet_analyzer_diagnostic.category-RoslynDiagnosticsMaintainability.severity = suggestion
+
+# CA2012: Use ValueTasks correctly
+dotnet_diagnostic.CA2012.severity = warning
+
+# CA2016: Forward the 'CancellationToken' parameter to methods
+dotnet_diagnostic.CA2016.severity = warning
+
+# CA2025: Do not pass 'IDisposable' instances into unawaited tasks
+dotnet_diagnostic.CA2025.severity = suggestion
+
+# VSTHRD200: Use "Async" suffix for async methods
+dotnet_diagnostic.VSTHRD200.severity = none
+
+# VSTHRD003: Avoid awaiting foreign Tasks
+dotnet_diagnostic.VSTHRD003.severity = none
+
+dotnet_diagnostic.VSTHRD*.severity = none

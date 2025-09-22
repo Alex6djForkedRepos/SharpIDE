@@ -3,7 +3,7 @@ using RazorCodeDocumentExtensions = WorkspaceAlias::Microsoft.AspNetCore.Razor.L
 
 namespace SharpIDE.RazorAccess;
 
-public record struct SharpIdeRazorClassifiedSpan(SharpIdeRazorSourceSpan Span, SharpIdeRazorSpanKind Kind, string? CodeClassificationType = null);
+public record struct SharpIdeRazorClassifiedSpan(SharpIdeRazorSourceSpan Span, SharpIdeRazorSpanKind Kind, string? CodeClassificationType = null, string? VsSemanticRangeType = null);
 
 public enum SharpIdeRazorSpanKind
 {
