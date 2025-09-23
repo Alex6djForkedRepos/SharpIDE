@@ -301,7 +301,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 			var linePos = new LinePosition(caretLine, caretColumn);
 				
 			var completions = await RoslynAnalysis.GetCodeCompletionsForDocumentAtPosition(_currentFile, linePos);
-			Callable.From(() =>
+			await this.InvokeAsync(() =>
 			{
 				foreach (var completionItem in completions.ItemsList)
 				{
@@ -311,7 +311,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 				UpdateCodeCompletionOptions(true);
 				//RequestCodeCompletion(true);
 				GD.Print($"Found {completions.ItemsList.Count} completions, displaying menu");
-			}).CallDeferred();
+			});
 		});
 	}
 	
