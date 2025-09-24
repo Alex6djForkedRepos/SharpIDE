@@ -10,6 +10,7 @@ public partial class SearchResultComponent : MarginContainer
     private Label _lineNumberLabel = null!;
     private Button _button = null!;
     
+    public SearchWindow ParentSearchWindow { get; set; } = null!;
     public SearchResult Result { get; set; } = null!;
     
     public override void _Ready()
@@ -25,6 +26,7 @@ public partial class SearchResultComponent : MarginContainer
     private void OnButtonPressed()
     {
         GodotGlobalEvents.InvokeFileExternallySelected(Result.File);
+        ParentSearchWindow.Hide();
     }
 
     private void SetValue(SearchResult result)

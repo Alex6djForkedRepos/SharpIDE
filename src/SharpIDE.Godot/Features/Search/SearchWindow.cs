@@ -48,6 +48,7 @@ public partial class SearchWindow : PopupPanel
             {
                 var resultNode = _searchResultEntryScene.Instantiate<SearchResultComponent>();
                 resultNode.Result = searchResult;
+                resultNode.ParentSearchWindow = this;
                 _searchResultsContainer.AddChild(resultNode);
             }
         });
