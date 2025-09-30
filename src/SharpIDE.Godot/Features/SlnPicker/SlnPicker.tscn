@@ -74,6 +74,7 @@ layout_mode = 2
 unique_name_in_owner = true
 oversampling_override = 1.0
 title = "Open a File"
+dialog_hide_on_ok = true
 file_mode = 0
 access = 2
 filters = PackedStringArray("*.sln,*.slnx;Solution Files")

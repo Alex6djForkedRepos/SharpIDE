@@ -19,7 +19,6 @@ public partial class IdeRoot : Control
 	public IdeWindow IdeWindow { get; set; } = null!;
 	private Button _openSlnButton = null!;
 	private Button _buildSlnButton = null!;
-	private FileDialog _fileDialog = null!;
 	private SearchWindow _searchWindow = null!;
 	private CodeEditorPanel _codeEditorPanel = null!;
 	private SolutionExplorerPanel _solutionExplorerPanel = null!;
@@ -45,7 +44,6 @@ public partial class IdeRoot : Control
 		_runMenuPopup = GetNode<Popup>("%RunMenuPopup");
 		_runMenuButton = GetNode<Button>("%RunMenuButton");
 		_codeEditorPanel = GetNode<CodeEditorPanel>("%CodeEditorPanel");
-		_fileDialog = GetNode<FileDialog>("%OpenSolutionDialog");
 		_searchWindow = GetNode<SearchWindow>("%SearchWindow");
 		_solutionExplorerPanel = GetNode<SolutionExplorerPanel>("%SolutionExplorerPanel");
 		_runPanel = GetNode<RunPanel>("%RunPanel");
@@ -54,12 +52,10 @@ public partial class IdeRoot : Control
 		
 		_runMenuButton.Pressed += OnRunMenuButtonPressed;
 		GodotGlobalEvents.Instance.FileSelected += OnSolutionExplorerPanelOnFileSelected;
-		_fileDialog.FileSelected += SetSlnFilePath;
 		_openSlnButton.Pressed += () => IdeWindow.PickSolution();
 		_buildSlnButton.Pressed += OnBuildSlnButtonPressed;
 		GodotGlobalEvents.Instance.BottomPanelVisibilityChangeRequested += async show => await this.InvokeAsync(() => _invertedVSplitContainer.InvertedSetCollapsed(!show));
 		_nodeReadyTcs.SetResult();
-		//OnSlnFileSelected(@"C:\Users\Matthew\Documents\Git\BlazorCodeBreaker\BlazorCodeBreaker.slnx");
 	}
 
 	private void OnRunMenuButtonPressed()

@@ -21,11 +21,7 @@ public partial class SlnPicker : Control
         _openSlnButton = GetNode<Button>("%OpenSlnButton");
         _openSlnButton.Pressed += () => _fileDialog.PopupCentered();
         var windowParent = GetParentOrNull<Window>();
-        _fileDialog.FileSelected += path =>
-        {
-            windowParent?.Hide();
-            _tcs.SetResult(path);
-        };
+        _fileDialog.FileSelected += path => _tcs.SetResult(path);
         windowParent?.CloseRequested += () => _tcs.SetResult(null);
     }
 
