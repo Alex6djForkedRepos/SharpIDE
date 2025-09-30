@@ -161,13 +161,6 @@ public partial class SolutionExplorerPanel : MarginContainer
 		fileItem.SetText(0, file.Name);
 		fileItem.SetIcon(0, CsharpFileIcon);
 		var container = new SharpIdeFileGodotContainer { File = file };
-		// TODO: Handle ObjectDB instances leaked at exit
 		fileItem.SetMetadata(0, container);
-	}
-	
-
-	// Called every frame. 'delta' is the elapsed time since the previous frame.
-	public override void _Process(double delta)
-	{
 	}
 }

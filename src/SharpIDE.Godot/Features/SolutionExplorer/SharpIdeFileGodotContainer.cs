@@ -3,7 +3,7 @@ using SharpIDE.Application.Features.SolutionDiscovery;
 
 namespace SharpIDE.Godot.Features.SolutionExplorer;
 
-public partial class SharpIdeFileGodotContainer : GodotObject
+public partial class SharpIdeFileGodotContainer : RefCounted
 {
     public required SharpIdeFile File { get; init; }
 }

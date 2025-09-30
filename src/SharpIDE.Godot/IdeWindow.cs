@@ -1,7 +1,7 @@
-using Ardalis.GuardClauses;
 using Godot;
 using Microsoft.Build.Locator;
 using Microsoft.Extensions.Hosting;
+using SharpIDE.Application.Features.Events;
 using SharpIDE.Godot.Features.SlnPicker;
 
 namespace SharpIDE.Godot;
@@ -25,6 +25,16 @@ public partial class IdeWindow : Control
         
         PickSolution(true);
     }
+    
+    // public override void _ExitTree()
+    // {
+    //     GodotGlobalEvents.Instance = null!;
+    //     GlobalEvents.Instance = null!;
+    //     GC.Collect();
+    //     GC.WaitForPendingFinalizers();
+    //     GC.Collect();
+    //     PrintOrphanNodes();
+    // }
     
     public void PickSolution(bool fullscreen = false)
     {

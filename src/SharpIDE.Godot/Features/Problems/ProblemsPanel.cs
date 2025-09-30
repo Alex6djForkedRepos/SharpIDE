@@ -35,7 +35,7 @@ public partial class ProblemsPanel : Control
             .Subscribe(s =>
             {
                 GD.Print($"ProblemsPanel: Solution changed to {s?.Name ?? "null"}");
-                _projects.Clear();
+                _projects.RemoveRange(_projects);
                 _projects.AddRange(s!.AllProjects);
             }).AddTo(this);
         BindToTree(_projects);
