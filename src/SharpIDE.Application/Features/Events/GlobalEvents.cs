@@ -6,26 +6,13 @@ namespace SharpIDE.Application.Features.Events;
 public class GlobalEvents
 {
 	public static GlobalEvents Instance { get; set; } = null!;
-	public event Func<Task> ProjectsRunningChanged = () => Task.CompletedTask;
-	public void InvokeProjectsRunningChanged() => ProjectsRunningChanged?.InvokeParallelFireAndForget();
-
-	public event Func<Task> StartedRunningProject = () => Task.CompletedTask;
-	public void InvokeStartedRunningProject() => StartedRunningProject?.InvokeParallelFireAndForget();
-
-	public event Func<SharpIdeProjectModel, Task> ProjectStartedDebugging = _ => Task.CompletedTask;
-	public void InvokeProjectStartedDebugging(SharpIdeProjectModel project) => ProjectStartedDebugging?.InvokeParallelFireAndForget(project);
-
-	public event Func<SharpIdeProjectModel, Task> ProjectStoppedDebugging = _ => Task.CompletedTask;
-	public void InvokeProjectStoppedDebugging(SharpIdeProjectModel project) => ProjectStoppedDebugging?.InvokeParallelFireAndForget(project);
-
-	public event Func<SharpIdeProjectModel, Task> ProjectStartedRunning = _ => Task.CompletedTask;
-	public void InvokeProjectStartedRunning(SharpIdeProjectModel project) => ProjectStartedRunning?.InvokeParallelFireAndForget(project);
-
-	public event Func<SharpIdeProjectModel, Task> ProjectStoppedRunning = _ => Task.CompletedTask;
-	public void InvokeProjectStoppedRunning(SharpIdeProjectModel project) => ProjectStoppedRunning?.InvokeParallelFireAndForget(project);
-
-	public event Func<ExecutionStopInfo, Task> DebuggerExecutionStopped = _ => Task.CompletedTask;
-	public void InvokeDebuggerExecutionStopped(ExecutionStopInfo executionStopInfo) => DebuggerExecutionStopped?.InvokeParallelFireAndForget(executionStopInfo);
+	public EventWrapper<Task> ProjectsRunningChanged { get; private set; } = new(() => Task.CompletedTask);
+	public EventWrapper<Task> StartedRunningProject { get; private set; } = new(() => Task.CompletedTask);
+	public EventWrapper<SharpIdeProjectModel, Task> ProjectStartedDebugging { get; private set; } = new(_ => Task.CompletedTask);
+	public EventWrapper<SharpIdeProjectModel, Task> ProjectStoppedDebugging { get; private set; } = new(_ => Task.CompletedTask);
+	public EventWrapper<SharpIdeProjectModel, Task> ProjectStartedRunning { get; private set; } = new(_ => Task.CompletedTask);
+	public EventWrapper<SharpIdeProjectModel, Task> ProjectStoppedRunning { get; private set; } = new(_ => Task.CompletedTask);
+	public EventWrapper<ExecutionStopInfo, Task> DebuggerExecutionStopped { get; private set; } = new(_ => Task.CompletedTask);
 }
 
 public static class AsyncEventExtensions

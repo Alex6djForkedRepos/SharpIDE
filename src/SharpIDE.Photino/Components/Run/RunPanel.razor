@@ -54,7 +54,7 @@
 	{
 		var tasks = SolutionModel.AllProjects.Select(p => p.MsBuildEvaluationProjectTask);
 		await Task.WhenAll(tasks);
-		GlobalEvents.Instance.ProjectsRunningChanged += OnProjectsRunningChanged;
+		GlobalEvents.Instance.ProjectsRunningChanged.Subscribe(OnProjectsRunningChanged);
 	}
 
 	private void CloseTab(SharpIdeProjectModel project)
@@ -67,7 +67,7 @@
 		await InvokeAsync(StateHasChanged);
 	}
 
-	public void Dispose() => GlobalEvents.Instance.ProjectsRunningChanged -= OnProjectsRunningChanged;
+	public void Dispose() => GlobalEvents.Instance.ProjectsRunningChanged.Unsubscribe(OnProjectsRunningChanged);
 
 	private void SetActiveTab(SharpIdeProjectModel project)
 	{

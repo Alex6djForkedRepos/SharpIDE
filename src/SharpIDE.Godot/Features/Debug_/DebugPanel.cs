@@ -22,14 +22,14 @@ public partial class DebugPanel : Control
 		//_tabBar.TabClosePressed
 		_tabBar.TabClicked += OnTabBarTabClicked;
 		_tabsPanel = GetNode<MarginContainer>("%TabsPanel");
-		GlobalEvents.Instance.ProjectStartedDebugging += async projectModel =>
+		GlobalEvents.Instance.ProjectStartedDebugging.Subscribe(async projectModel =>
 		{
 			await this.InvokeAsync(() => ProjectStartedDebugging(projectModel));
-		};
-		GlobalEvents.Instance.ProjectStoppedDebugging += async projectModel =>
+		});
+		GlobalEvents.Instance.ProjectStoppedDebugging.Subscribe(async projectModel =>
 		{
 			await this.InvokeAsync(() => ProjectStoppedDebugging(projectModel));
-		};
+		});
 	}
 
 	private void OnTabBarTabClicked(long idx)

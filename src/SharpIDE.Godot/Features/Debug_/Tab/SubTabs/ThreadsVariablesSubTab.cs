@@ -20,7 +20,7 @@ public partial class ThreadsVariablesSubTab : Control
 		_threadsVboxContainer = GetNode<VBoxContainer>("%ThreadsPanel/VBoxContainer");
 		_stackFramesVboxContainer = GetNode<VBoxContainer>("%StackFramesPanel/VBoxContainer");
 		_variablesVboxContainer = GetNode<VBoxContainer>("%VariablesPanel/VBoxContainer");
-		GlobalEvents.Instance.DebuggerExecutionStopped += OnDebuggerExecutionStopped;
+		GlobalEvents.Instance.DebuggerExecutionStopped.Subscribe(OnDebuggerExecutionStopped);
 		
 	}
 

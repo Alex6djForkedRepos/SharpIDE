@@ -93,13 +93,13 @@ public class RunService
 			project.OpenInRunPanel = true;
 			if (isDebug)
 			{
-				GlobalEvents.Instance.InvokeProjectStartedDebugging(project);
+				GlobalEvents.Instance.ProjectStartedDebugging.InvokeParallelFireAndForget(project);
 			}
 			else
 			{
-				GlobalEvents.Instance.InvokeProjectsRunningChanged();
-				GlobalEvents.Instance.InvokeStartedRunningProject();
-				GlobalEvents.Instance.InvokeProjectStartedRunning(project);
+				GlobalEvents.Instance.ProjectsRunningChanged.InvokeParallelFireAndForget();
+				GlobalEvents.Instance.StartedRunningProject.InvokeParallelFireAndForget();
+				GlobalEvents.Instance.ProjectStartedRunning.InvokeParallelFireAndForget(project);
 			}
 			project.InvokeProjectStartedRunning();
 			await process.WaitForExitAsync().WaitAsync(project.RunningCancellationTokenSource.Token).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
@@ -115,12 +115,12 @@ public class RunService
 			project.Running = false;
 			if (isDebug)
 			{
-				GlobalEvents.Instance.InvokeProjectStoppedDebugging(project);
+				GlobalEvents.Instance.ProjectStoppedDebugging.InvokeParallelFireAndForget(project);
 			}
 			else
 			{
-				GlobalEvents.Instance.InvokeProjectsRunningChanged();
-				GlobalEvents.Instance.InvokeProjectStoppedRunning(project);
+				GlobalEvents.Instance.ProjectsRunningChanged.InvokeParallelFireAndForget();
+				GlobalEvents.Instance.ProjectStoppedRunning.InvokeParallelFireAndForget(project);
 			}
 
 			project.InvokeProjectStoppedRunning();
