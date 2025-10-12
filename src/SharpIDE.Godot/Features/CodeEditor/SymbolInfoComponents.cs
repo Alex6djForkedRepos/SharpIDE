@@ -19,7 +19,6 @@ public static partial class SymbolInfoComponents
         label.PushFont(MonospaceFont);
         label.AddAttributes(methodSymbol);
         label.AddAccessibilityModifier(methodSymbol);
-        label.AddText(" ");
         label.AddMethodStaticModifier(methodSymbol);
         label.AddVirtualModifier(methodSymbol);
         label.AddAbstractModifier(methodSymbol);
@@ -42,13 +41,14 @@ public static partial class SymbolInfoComponents
     
     private static string GetAccessibilityString(this Accessibility accessibility) => accessibility switch
     {
-        Accessibility.Public => "public",
-        Accessibility.Private => "private",
-        Accessibility.Protected => "protected",
-        Accessibility.Internal => "internal",
-        Accessibility.ProtectedOrInternal => "protected internal",
-        Accessibility.ProtectedAndInternal => "private protected",
-        _ => "unknown"
+        Accessibility.Public => "public ",
+        Accessibility.Private => "private ",
+        Accessibility.Protected => "protected ",
+        Accessibility.Internal => "internal ",
+        Accessibility.ProtectedOrInternal => "protected internal ",
+        Accessibility.ProtectedAndInternal => "private protected ",
+        Accessibility.NotApplicable => string.Empty,
+        _ => "unknown "
     };
 
     private static void AddAccessibilityModifier(this RichTextLabel label, ISymbol methodSymbol)

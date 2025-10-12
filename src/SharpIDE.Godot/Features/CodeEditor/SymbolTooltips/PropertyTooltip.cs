@@ -15,7 +15,6 @@ public partial class SymbolInfoComponents
         label.PushFont(MonospaceFont);
         label.AddAttributes(symbol);
         label.AddAccessibilityModifier(symbol);
-        label.AddText(" ");
         label.AddStaticModifier(symbol);
         label.AddReadonlyModifier(symbol);
         label.AddVirtualModifier(symbol);
