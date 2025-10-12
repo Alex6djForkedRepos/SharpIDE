@@ -264,21 +264,32 @@ public static partial class SymbolInfoComponents
     
     private static void AddContainingNamespaceAndClass(this RichTextLabel label, ISymbol symbol)
     {
-        if (symbol.ContainingNamespace is null || symbol.ContainingNamespace.IsGlobalNamespace) return;
+        if (symbol.ContainingNamespace is null || symbol.ContainingNamespace.IsGlobalNamespace) return; // might be wrong
         label.Newline();
-        label.AddText("in class ");
+        if (symbol.ContainingType is null)
+        {
+            label.AddText("in namespace ");
+        }
+        else
+        {
+            label.AddText("in class ");
+        }
         var namespaces = symbol.ContainingNamespace.ToDisplayString().Split('.');
         label.PushMeta("TODO", RichTextLabel.MetaUnderline.OnHover);
-        foreach (var ns in namespaces)
+        foreach (var (index, ns) in namespaces.Index())
         {
             label.PushColor(CachedColors.KeywordBlue);
             label.AddText(ns);
             label.Pop();
-            label.AddText(".");
+            if (index < namespaces.Length - 1) label.AddText(".");
         }
-        label.PushColor(CachedColors.ClassGreen);
-        label.AddText(symbol.ContainingType.Name);
-        label.Pop();
+        if (symbol.ContainingType is not null)
+        {
+            label.AddText(".");
+            label.PushColor(CachedColors.ClassGreen);
+            label.AddText(symbol.ContainingType.Name);
+            label.Pop();
+        }
         label.Pop(); // meta
     }
     

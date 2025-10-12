@@ -127,10 +127,11 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		var symbolInfoNode = roslynSymbol switch
 		{
 			IMethodSymbol methodSymbol => SymbolInfoComponents.GetMethodSymbolInfo(methodSymbol),
-			INamedTypeSymbol namedTypeSymbol => new Control(),
+			INamedTypeSymbol namedTypeSymbol => SymbolInfoComponents.GetNamedTypeSymbolInfo(namedTypeSymbol),
 			IPropertySymbol propertySymbol => SymbolInfoComponents.GetPropertySymbolInfo(propertySymbol),
 			IFieldSymbol fieldSymbol => SymbolInfoComponents.GetFieldSymbolInfo(fieldSymbol),
 			IParameterSymbol parameterSymbol => SymbolInfoComponents.GetParameterSymbolInfo(parameterSymbol),
+			//ILocalSymbol localSymbol => SymbolInfoComponents.GetLocalSymbolInfo(localSymbol),
 			_ => new Control()
 		};
 		popupPanel.AddChild(symbolInfoNode);
