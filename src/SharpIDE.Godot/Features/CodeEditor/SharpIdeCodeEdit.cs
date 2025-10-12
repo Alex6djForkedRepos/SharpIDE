@@ -98,11 +98,16 @@ public partial class SharpIdeCodeEdit : CodeEdit
 			return;
 		}
 		
-		var popupPanel = new PopupPanel();
-		popupPanel.Unfocusable = true; // may need to change eventually for navigating to other symbols
+		var popupPanel = new Window();
+		popupPanel.WrapControls = true;
+		popupPanel.Unresizable = true;
+		popupPanel.Transparent = true;
+		popupPanel.Borderless = true;
+		popupPanel.PopupWMHint = true;
+		popupPanel.MinimizeDisabled = true;
+		popupPanel.MaximizeDisabled = true;
+	
 		popupPanel.MouseExited += () => popupPanel.QueueFree();
-		popupPanel.Size = new Vector2I(1, 1); // defaults to 100x100, will grow (but not shrink) to content
-		// set background color
 		
 		var styleBox = new StyleBoxFlat
 		{
@@ -118,12 +123,17 @@ public partial class SharpIdeCodeEdit : CodeEdit
 			CornerRadiusTopRight = 4,
 			ShadowSize = 2,
 			ShadowColor = new Color(0, 0, 0, 0.5f),
+			ExpandMarginTop = -2, // negative margin seems to fix shadow being cut off?
+			ExpandMarginBottom = -2,
+			ExpandMarginLeft = -2,
+			ExpandMarginRight = -2,
 			ContentMarginTop = 10,
 			ContentMarginBottom = 10,
-			ContentMarginLeft = 10,
-			ContentMarginRight = 10
+			ContentMarginLeft = 12,
+			ContentMarginRight = 12
 		};
-		popupPanel.AddThemeStyleboxOverride("panel", styleBox);
+		var panel = new PanelContainer();
+		panel.AddThemeStyleboxOverride("panel", styleBox);
 		
 		var symbolInfoNode = roslynSymbol switch
 		{
@@ -135,14 +145,20 @@ public partial class SharpIdeCodeEdit : CodeEdit
 			ILocalSymbol localSymbol => SymbolInfoComponents.GetLocalVariableSymbolInfo(localSymbol),
 			_ => SymbolInfoComponents.GetUnknownTooltip(roslynSymbol)
 		};
-		popupPanel.AddChild(symbolInfoNode);
+		panel.AddChild(symbolInfoNode);
+		var vboxContainer = new VBoxContainer();
+		vboxContainer.AddThemeConstantOverride("separation", 0);
+		vboxContainer.AddChild(new Control { CustomMinimumSize = new Vector2I(0, GetLineHeight()) });
+		vboxContainer.AddChild(panel);
+		popupPanel.AddChild(vboxContainer);
+		popupPanel.ChildControlsChanged();
 		AddChild(popupPanel);
 		
 		var globalSymbolPosition = GetRectAtLineColumn((int)line, (int)column).Position + GetGlobalPosition();
-		globalSymbolPosition.Y += GetLineHeight();
 		
 		var globalMousePosition = GetGlobalMousePosition();
-		popupPanel.Position = new Vector2I((int)globalMousePosition.X, (int)globalSymbolPosition.Y);
+		// -1 so that the mouse is inside the popup, otherwise the mouse exit event won't occur if the cursor moves away immediately
+		popupPanel.Position = new Vector2I((int)globalMousePosition.X - 1, (int)globalSymbolPosition.Y);
 		popupPanel.Popup();
 	}
 
