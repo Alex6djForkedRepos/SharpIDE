@@ -164,6 +164,7 @@ public partial class CustomHighlighter : SyntaxHighlighter
             "static symbol" => CachedColors.Yellow, // ??
             "parameter name" => CachedColors.VariableBlue,
             "local name" => CachedColors.VariableBlue,
+            "type parameter name" => CachedColors.ClassGreen,
 
             // Punctuation & operators
             "operator" => CachedColors.White,
