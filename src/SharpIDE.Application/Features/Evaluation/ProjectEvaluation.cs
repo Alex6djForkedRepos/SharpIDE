@@ -26,7 +26,7 @@ public static class ProjectEvaluation
 
 		var project = _projectCollection.GetLoadedProjects(projectFilePath).Single();
 		var projectRootElement = project.Xml;
-		projectRootElement.Reload();
+		projectRootElement.Reload(false);
 		project.ReevaluateIfNecessary();
 	}
 
