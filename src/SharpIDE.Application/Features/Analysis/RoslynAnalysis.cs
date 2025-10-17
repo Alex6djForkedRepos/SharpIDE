@@ -457,10 +457,9 @@ public static class RoslynAnalysis
 
 		var syntaxTree = await document.GetSyntaxTreeAsync(cancellationToken);
 		var root = await syntaxTree!.GetRootAsync(cancellationToken);
-		var classifiedSpans = await Classifier.GetClassifiedSpansAsync(document, root.FullSpan, cancellationToken);
 
-		var result = classifiedSpans.Select(s => (syntaxTree.GetMappedLineSpan(s.TextSpan), s));
-
+		var classifiedSpans = await ClassifierHelper.GetClassifiedSpansAsync(document, root.FullSpan, ClassificationOptions.Default, false, cancellationToken);
+		var result = classifiedSpans.Select(s => (syntaxTree.GetMappedLineSpan(s.TextSpan), s)).ToList();
 		return result;
 	}
 

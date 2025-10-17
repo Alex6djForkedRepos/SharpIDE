@@ -32,6 +32,12 @@ public static class ControlExtensions
     // }
 }
 
+/// Has no functionality, just used as a reminder to indicate that a method must be called on the Godot UI thread.
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+public class RequiresGodotUiThreadAttribute : Attribute
+{
+}
+
 public static class NodeExtensions
 {
     extension(TreeItem treeItem)

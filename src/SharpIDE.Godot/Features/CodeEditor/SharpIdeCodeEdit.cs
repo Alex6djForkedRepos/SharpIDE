@@ -15,6 +15,7 @@ using Timer = Godot.Timer;
 
 namespace SharpIDE.Godot.Features.CodeEditor;
 
+#pragma warning disable VSTHRD101
 public partial class SharpIdeCodeEdit : CodeEdit
 {
 	[Signal]
@@ -48,6 +49,41 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		SymbolHovered += OnSymbolHovered;
 		SymbolValidate += OnSymbolValidate;
 		SymbolLookup += OnSymbolLookup;
+		LinesEditedFrom += OnLinesEditedFrom;
+	}
+
+	public enum LineEditOrigin
+	{
+		StartOfLine,
+		EndOfLine,
+		Unknown
+	}
+	// Line removed - fromLine 55, toLine 54
+	// Line added - fromLine 54, toLine 55
+	// Multi cursor gets a single line event for each
+	// problem is 10 to 11 gets returned for 'Enter' at the start of line 10, as well as 'Enter' at the end of line 10
+	// This means that the line that moves down needs to be based on whether the new line was from the start or end of the line
+	private void OnLinesEditedFrom(long fromLine, long toLine)
+	{
+		if (fromLine == toLine) return;
+		var fromLineText = GetLine((int)fromLine);
+		var caretPosition = this.GetCaretPosition();
+		var textFrom0ToCaret = fromLineText[..caretPosition.col];
+		var caretPositionEnum = LineEditOrigin.Unknown;
+		if (string.IsNullOrWhiteSpace(textFrom0ToCaret))
+		{
+			caretPositionEnum = LineEditOrigin.StartOfLine;
+		}
+		else
+		{
+			var textfromCaretToEnd = fromLineText[caretPosition.col..];
+			if (string.IsNullOrWhiteSpace(textfromCaretToEnd))
+			{
+				caretPositionEnum = LineEditOrigin.EndOfLine;
+			}
+		}
+		//GD.Print($"Lines edited from {fromLine} to {toLine}, origin: {caretPositionEnum}, current caret position: {caretPosition}");
+		_syntaxHighlighter.LinesChanged(fromLine, toLine, caretPositionEnum);
 	}
 
 	public override void _ExitTree()
@@ -208,19 +244,31 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		// GD.Print($"Selection changed to line {_currentLine}, start {_selectionStartCol}, end {_selectionEndCol}");
 	}
 
-	// Ideally this method completes in < 35ms, to ~ handle 28 char/s spam typing
-	private async void OnTextChanged()
+	private CancellationTokenSource _textChangedCts = new();
+	private void OnTextChanged()
 	{
 		var __ = SharpIdeOtel.Source.StartActivity($"{nameof(SharpIdeCodeEdit)}.{nameof(OnTextChanged)}");
-		// Note that we are currently on the UI thread, so be very conscious of what we do here
-		// If we update the documents syntax highlighting here, we won't get any flashes of incorrect highlighting, most noticeable when inserting new lines
-		_currentFile.IsDirty.Value = true;
-		await Singletons.FileManager.UpdateFileTextInMemory(_currentFile, Text);
-		var syntaxHighlighting = RoslynAnalysis.GetDocumentSyntaxHighlighting(_currentFile);
-		var razorSyntaxHighlighting = RoslynAnalysis.GetRazorDocumentSyntaxHighlighting(_currentFile);
-		SetSyntaxHighlightingModel(await syntaxHighlighting, await razorSyntaxHighlighting);
-		__?.Dispose();
-		_ = Task.GodotRun(async () => SetDiagnosticsModel(await RoslynAnalysis.GetDocumentDiagnostics(_currentFile)));
+		_ = Task.GodotRun(async () =>
+		{
+			_currentFile.IsDirty.Value = true;
+			await Singletons.FileManager.UpdateFileTextInMemory(_currentFile, Text);
+			await _textChangedCts.CancelAsync(); // Currently the below methods throw, TODO Fix with suppress throwing, and handle
+			_textChangedCts.Dispose();
+			_textChangedCts = new CancellationTokenSource();
+			_ = Task.GodotRun(async () =>
+			{
+				var syntaxHighlighting = RoslynAnalysis.GetDocumentSyntaxHighlighting(_currentFile, _textChangedCts.Token);
+				var razorSyntaxHighlighting = RoslynAnalysis.GetRazorDocumentSyntaxHighlighting(_currentFile, _textChangedCts.Token);
+				await Task.WhenAll(syntaxHighlighting, razorSyntaxHighlighting);
+				await this.InvokeAsync(async () => SetSyntaxHighlightingModel(await syntaxHighlighting, await razorSyntaxHighlighting));
+				__?.Dispose();
+			});
+			_ = Task.GodotRun(async () =>
+			{
+				var documentDiagnostics = await RoslynAnalysis.GetDocumentDiagnostics(_currentFile, _textChangedCts.Token);
+				await this.InvokeAsync(() => SetDiagnosticsModel(documentDiagnostics));
+			});
+		});
 	}
 
 	// TODO: This is now significantly slower, invoke -> text updated in editor
@@ -296,7 +344,8 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		});
 		await Task.WhenAll(syntaxHighlighting, razorSyntaxHighlighting, setTextTask); // Text must be set before setting syntax highlighting
 		await this.InvokeAsync(async () => SetSyntaxHighlightingModel(await syntaxHighlighting, await razorSyntaxHighlighting));
-		SetDiagnosticsModel(await diagnostics);
+		await diagnostics;
+		await this.InvokeAsync(async () => SetDiagnosticsModel(await diagnostics));
 	}
 
 	private async Task OnFileChangedExternallyFromDisk()
@@ -400,17 +449,19 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		SetLineBackgroundColor(line, lineColour);
 	}
 
+	[RequiresGodotUiThread]
 	private void SetDiagnosticsModel(ImmutableArray<(FileLinePositionSpan fileSpan, Diagnostic diagnostic)> diagnostics)
 	{
 		_diagnostics = diagnostics;
-		Callable.From(QueueRedraw).CallDeferred();
+		QueueRedraw();
 	}
 
+	[RequiresGodotUiThread]
 	private void SetSyntaxHighlightingModel(IEnumerable<(FileLinePositionSpan fileSpan, ClassifiedSpan classifiedSpan)> classifiedSpans, IEnumerable<SharpIdeRazorClassifiedSpan> razorClassifiedSpans)
 	{
 		_syntaxHighlighter.SetHighlightingData(classifiedSpans, razorClassifiedSpans);
 		//_syntaxHighlighter.ClearHighlightingCache();
-		_syntaxHighlighter.UpdateCache();
+		_syntaxHighlighter.UpdateCache(); // I don't think this does anything, it will call _UpdateCache which we have not implemented
 		SyntaxHighlighter = null;
 		SyntaxHighlighter = _syntaxHighlighter; // Reassign to trigger redraw
 	}

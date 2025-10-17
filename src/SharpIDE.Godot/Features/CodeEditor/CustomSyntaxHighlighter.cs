@@ -3,6 +3,7 @@ using Godot;
 using Godot.Collections;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Classification;
+using SharpIDE.Godot.Features.CodeEditor;
 using SharpIDE.RazorAccess;
 
 namespace SharpIDE.Godot;
@@ -30,6 +31,67 @@ public partial class CustomHighlighter : SyntaxHighlighter
             .ToList();
         _classifiedSpansByLine = spansGroupedByFileSpan.ToDictionary(g => g.Key, g => g.ToImmutableArray());
     }
+
+    // Indicates that lines were removed or added, and the overall result of that is that a line (wasLineNumber), is now (becameLineNumber)
+    // So if you added a line above line 10, then wasLineNumber=10, becameLineNumber=11
+    // If you removed a line above line 10, then wasLineNumber=10, becameLineNumber=9
+    //
+    // This is all a very dodgy workaround to move highlighting up and down, while we wait for the workspace to return us highlighting for the updated file
+    public void LinesChanged(long wasLineNumber, long becameLineNumber, SharpIdeCodeEdit.LineEditOrigin origin)
+    {
+        var difference = (int)(becameLineNumber - wasLineNumber);
+        if (difference is 0) return;
+        if (difference > 0)
+        {
+            LinesAdded(wasLineNumber, difference, origin);
+        }
+        else
+        {
+            LinesRemoved(wasLineNumber, -difference);
+        }
+    }
+
+    private void LinesAdded(long fromLine, int difference, SharpIdeCodeEdit.LineEditOrigin origin)
+    {
+        var newRazorDict = new System.Collections.Generic.Dictionary<int, ImmutableArray<SharpIdeRazorClassifiedSpan>>();
+
+        foreach (var kvp in _razorClassifiedSpansByLine)
+        {
+            bool shouldShift =
+                kvp.Key > fromLine ||                // always shift lines after the insertion point
+                (origin == SharpIdeCodeEdit.LineEditOrigin.StartOfLine && kvp.Key == fromLine); // shift current line if origin is Start
+
+            int newKey = shouldShift ? kvp.Key + difference : kvp.Key;
+            newRazorDict[newKey] = kvp.Value;
+        }
+
+        _razorClassifiedSpansByLine = newRazorDict;
+    }
+    
+    private void LinesRemoved(long fromLine, int numberOfLinesRemoved)
+    {
+        // everything from 'fromLine' onwards needs to be shifted up by numberOfLinesRemoved
+        var newRazorDict = new System.Collections.Generic.Dictionary<int, ImmutableArray<SharpIdeRazorClassifiedSpan>>();
+    
+        foreach (var kvp in _razorClassifiedSpansByLine)
+        {
+            if (kvp.Key < fromLine)
+            {
+                newRazorDict[kvp.Key] = kvp.Value;
+            }
+            else if (kvp.Key == fromLine)
+            {
+                newRazorDict[kvp.Key - numberOfLinesRemoved] = kvp.Value;
+            }
+            else if (kvp.Key >= fromLine + numberOfLinesRemoved)
+            {
+                newRazorDict[kvp.Key - numberOfLinesRemoved] = kvp.Value;
+            } 
+        }
+    
+        _razorClassifiedSpansByLine = newRazorDict;
+    }
+    
     public override Dictionary _GetLineSyntaxHighlighting(int line)
     {
         var highlights = (_classifiedSpansByLine, _razorClassifiedSpansByLine) switch
