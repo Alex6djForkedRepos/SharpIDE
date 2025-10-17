@@ -15,6 +15,8 @@ public class GlobalEvents
 	public EventWrapper<SharpIdeProjectModel, Task> ProjectStoppedRunning { get; } = new(_ => Task.CompletedTask);
 	public EventWrapper<ExecutionStopInfo, Task> DebuggerExecutionStopped { get; } = new(_ => Task.CompletedTask);
 	public EventWrapper<SharpIdeFile, Task> IdeFileSavedToDisk { get; } = new(_ => Task.CompletedTask);
+	/// A document changed, project was reloaded etc. Document changes include unsaved changes in the IDE.
+	public EventWrapper<Task> SolutionAltered { get; } = new(() => Task.CompletedTask);
 
 	public FileSystemWatcherInternal FileSystemWatcherInternal { get; } = new();
 }

@@ -49,7 +49,7 @@ public partial class IdeRoot : Control
 		Singletons.BuildService = BuildService.Instance;
 		Singletons.FileWatcher?.Dispose();
 		Singletons.FileWatcher = new IdeFileWatcher();
-		Singletons.FileManager = new IdeFileManager();
+		Singletons.OpenTabsFileManager = new IdeOpenTabsFileManager();
 		Singletons.FileExternalChangeHandler = new IdeFileExternalChangeHandler();
 		Singletons.FileSavedToDiskHandler = new IdeFileSavedToDiskHandler();
 	}

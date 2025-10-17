@@ -45,7 +45,7 @@ public partial class IdeWindow : Control
     
     private void OnFocusExited()
     {
-        _ = Task.GodotRun(async () => await Singletons.FileManager.SaveAllOpenFilesAsync());
+        _ = Task.GodotRun(async () => await Singletons.OpenTabsFileManager.SaveAllOpenFilesAsync());
     }
     
     public void PickSolution(bool fullscreen = false)

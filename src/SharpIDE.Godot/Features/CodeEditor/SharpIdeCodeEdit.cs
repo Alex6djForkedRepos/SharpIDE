@@ -53,6 +53,15 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		SymbolValidate += OnSymbolValidate;
 		SymbolLookup += OnSymbolLookup;
 		LinesEditedFrom += OnLinesEditedFrom;
+		GlobalEvents.Instance.SolutionAltered.Subscribe(OnSolutionAltered);
+	}
+
+	private async Task OnSolutionAltered()
+	{
+		if (_currentFile is null) return;
+		GD.Print("Solution altered, updating project diagnostics for current file");
+		var projectDiagnostics = await RoslynAnalysis.GetProjectDiagnosticsForFile(_currentFile);
+		await this.InvokeAsync(() => SetProjectDiagnostics(projectDiagnostics));
 	}
 
 	public enum LineEditOrigin
@@ -254,7 +263,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		_ = Task.GodotRun(async () =>
 		{
 			_currentFile.IsDirty.Value = true;
-			await Singletons.FileManager.UpdateFileTextInMemory(_currentFile, Text);
+			await Singletons.OpenTabsFileManager.UpdateFileTextInMemory(_currentFile, Text);
 			await _textChangedCts.CancelAsync(); // Currently the below methods throw, TODO Fix with suppress throwing, and handle
 			_textChangedCts.Dispose();
 			_textChangedCts = new CancellationTokenSource();
@@ -270,11 +279,6 @@ public partial class SharpIdeCodeEdit : CodeEdit
 			{
 				var documentDiagnostics = await RoslynAnalysis.GetDocumentDiagnostics(_currentFile, _textChangedCts.Token);
 				await this.InvokeAsync(() => SetDiagnostics(documentDiagnostics));
-			});
-			_ = Task.GodotRun(async () =>
-			{
-				var projectDiagnosticsForFile = await RoslynAnalysis.GetProjectDiagnosticsForFile(_currentFile);
-				await this.InvokeAsync(() => SetProjectDiagnostics(projectDiagnosticsForFile));
 			});
 		});
 	}
@@ -292,7 +296,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 			// TODO: This can be more efficient - we can just update in memory and proceed with highlighting etc. Save to disk in background.
 			foreach (var (affectedFile, updatedText) in affectedFiles)
 			{
-				await Singletons.FileManager.UpdateInMemoryIfOpenAndSaveAsync(affectedFile, updatedText);
+				await Singletons.OpenTabsFileManager.UpdateInMemoryIfOpenAndSaveAsync(affectedFile, updatedText);
 				affectedFile.FileContentsChangedExternally.InvokeParallelFireAndForget();
 			}
 		});
@@ -300,7 +304,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 
 	private async Task OnFileChangedExternallyInMemory()
 	{
-		var fileContents = await Singletons.FileManager.GetFileTextAsync(_currentFile);
+		var fileContents = await Singletons.OpenTabsFileManager.GetFileTextAsync(_currentFile);
 		var syntaxHighlighting = RoslynAnalysis.GetDocumentSyntaxHighlighting(_currentFile);
 		var razorSyntaxHighlighting = RoslynAnalysis.GetRazorDocumentSyntaxHighlighting(_currentFile);
 		var diagnostics = RoslynAnalysis.GetDocumentDiagnostics(_currentFile);
@@ -337,7 +341,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 	{
 		await Task.CompletedTask.ConfigureAwait(ConfigureAwaitOptions.ForceYielding); // get off the UI thread
 		_currentFile = file;
-		var readFileTask = Singletons.FileManager.GetFileTextAsync(file);
+		var readFileTask = Singletons.OpenTabsFileManager.GetFileTextAsync(file);
 		_currentFile.FileContentsChangedExternally.Subscribe(OnFileChangedExternallyInMemory);
 		_currentFile.FileContentsChangedExternallyFromDisk.Subscribe(OnFileChangedExternallyFromDisk);
 		
@@ -361,7 +365,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 
 	private async Task OnFileChangedExternallyFromDisk()
 	{
-		await Singletons.FileManager.ReloadFileFromDisk(_currentFile);
+		await Singletons.OpenTabsFileManager.ReloadFileFromDisk(_currentFile);
 		await OnFileChangedExternallyInMemory();
 	}
 
@@ -428,14 +432,14 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		{
 			_ = Task.GodotRun(async () =>
 			{
-				await Singletons.FileManager.SaveAllOpenFilesAsync();
+				await Singletons.OpenTabsFileManager.SaveAllOpenFilesAsync();
 			});
 		}
 		else if (@event.IsActionPressed(InputStringNames.SaveFile))
 		{
 			_ = Task.GodotRun(async () =>
 			{
-				await Singletons.FileManager.SaveFileAsync(_currentFile);
+				await Singletons.OpenTabsFileManager.SaveFileAsync(_currentFile);
 			});
 		}
 	}
@@ -467,7 +471,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 	[RequiresGodotUiThread]
 	private void SetProjectDiagnostics(ImmutableArray<SharpIdeDiagnostic> diagnostics)
 	{
-		_fileDiagnostics = diagnostics;
+		_projectDiagnosticsForFile = diagnostics;
 		QueueRedraw();
 	}
 
