@@ -2,6 +2,7 @@ using Godot;
 using Microsoft.Build.Locator;
 using Microsoft.Extensions.Hosting;
 using SharpIDE.Application.Features.Events;
+using SharpIDE.Application.Features.FilePersistence;
 using SharpIDE.Godot.Features.IdeSettings;
 using SharpIDE.Godot.Features.SlnPicker;
 
@@ -19,9 +20,12 @@ public partial class IdeWindow : Control
 
     private IdeRoot? _ideRoot;
     private SlnPicker? _slnPicker;
+    
+    [Inject] private readonly IdeOpenTabsFileManager _openTabsFileManager = null!;
 
     public override void _Ready()
     {
+        GD.Print("IdeWindow _Ready called");
         ResourceLoader.LoadThreadedRequest(SlnPickerScenePath);
         ResourceLoader.LoadThreadedRequest(IdeRootScenePath);
         MSBuildLocator.RegisterDefaults();
@@ -45,7 +49,7 @@ public partial class IdeWindow : Control
     
     private void OnFocusExited()
     {
-        _ = Task.GodotRun(async () => await Singletons.OpenTabsFileManager.SaveAllOpenFilesAsync());
+        _ = Task.GodotRun(async () => await _openTabsFileManager.SaveAllOpenFilesAsync());
     }
     
     public void PickSolution(bool fullscreen = false)

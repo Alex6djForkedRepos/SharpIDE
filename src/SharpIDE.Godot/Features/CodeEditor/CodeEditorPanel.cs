@@ -4,6 +4,7 @@ using R3;
 using SharpIDE.Application.Features.Analysis;
 using SharpIDE.Application.Features.Debugging;
 using SharpIDE.Application.Features.Events;
+using SharpIDE.Application.Features.Run;
 using SharpIDE.Application.Features.SolutionDiscovery;
 using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
 
@@ -18,6 +19,7 @@ public partial class CodeEditorPanel : MarginContainer
     private TabContainer _tabContainer = null!;
 	private ExecutionStopInfo? _debuggerExecutionStopInfo;
     
+    [Inject] private readonly RunService _runService = null!;
     public override void _Ready()
     {
         _tabContainer = GetNode<TabContainer>("TabContainer");
@@ -125,7 +127,7 @@ public partial class CodeEditorPanel : MarginContainer
         _debuggerExecutionStopInfo = null;
         _ = Task.GodotRun(async () =>
         {
-            await Singletons.RunService.SendDebuggerStepOver(threadId);
+            await _runService.SendDebuggerStepOver(threadId);
         });
     }
 }

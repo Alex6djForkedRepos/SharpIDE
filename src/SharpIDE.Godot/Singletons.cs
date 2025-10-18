@@ -8,11 +8,5 @@ namespace SharpIDE.Godot;
 
 public static class Singletons
 {
-    public static RunService RunService { get; set; } = null!;
-    public static BuildService BuildService { get; set; } = null!;
-    public static IdeFileWatcher FileWatcher { get; set; } = null!;
-    public static IdeOpenTabsFileManager OpenTabsFileManager { get; set; } = null!;
-    public static IdeFileExternalChangeHandler FileExternalChangeHandler { get; set; } = null!;
-    public static IdeFileSavedToDiskHandler FileSavedToDiskHandler { get; set; } = null!;
     public static AppState AppState { get; set; } = null!;
 }

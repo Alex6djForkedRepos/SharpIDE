@@ -1,4 +1,5 @@
 using Godot;
+using SharpIDE.Application.Features.Run;
 using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
 using SharpIDE.Godot.Features.BottomPanel;
 
@@ -11,6 +12,8 @@ public partial class RunMenuItem : HBoxContainer
     private Button _runButton = null!;
     private Button _debugButton = null!;
     private Button _stopButton = null!;
+    
+    [Inject] private readonly RunService _runService = null!;
     public override void _Ready()
     {
         _label = GetNode<Label>("Label");
@@ -47,18 +50,18 @@ public partial class RunMenuItem : HBoxContainer
 
     private async void OnStopButtonPressed()
     {
-        await Singletons.RunService.CancelRunningProject(Project);
+        await _runService.CancelRunningProject(Project);
     }
 
     private async void OnRunButtonPressed()
     {
 		GodotGlobalEvents.Instance.BottomPanelTabExternallySelected.InvokeParallelFireAndForget(BottomPanelType.Run);
-        await Singletons.RunService.RunProject(Project).ConfigureAwait(false);
+        await _runService.RunProject(Project).ConfigureAwait(false);
     }
     
     private async void OnDebugButtonPressed()
     {
         GodotGlobalEvents.Instance.BottomPanelTabExternallySelected.InvokeParallelFireAndForget(BottomPanelType.Debug);
-        await Singletons.RunService.RunProject(Project, true).ConfigureAwait(false);
+        await _runService.RunProject(Project, true).ConfigureAwait(false);
     }
 }

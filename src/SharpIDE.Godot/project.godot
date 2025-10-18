@@ -19,6 +19,7 @@ config/icon="uid://tpjfx7mo6cwj"
 
 [autoload]
 
+DiAutoload="*res://DiAutoload.cs"
 FrameProviderDispatcher="*res://addons/R3.Godot/FrameProviderDispatcher.cs"
 ObservableTrackerRuntimeHook="*res://addons/R3.Godot/ObservableTrackerRuntimeHook.cs"
 

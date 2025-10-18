@@ -1,6 +1,9 @@
 ﻿using Godot;
+using SharpIDE.Application.Features.Analysis;
 using SharpIDE.Application.Features.Build;
+using SharpIDE.Application.Features.Evaluation;
 using SharpIDE.Application.Features.Events;
+using SharpIDE.Application.Features.Run;
 using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
 using SharpIDE.Godot.Features.BottomPanel;
 
@@ -18,6 +21,9 @@ file enum ProjectContextMenuOptions
 public partial class SolutionExplorerPanel
 {
     private Texture2D _runIcon = ResourceLoader.Load<Texture2D>("uid://bkty6563cthj8");
+    [Inject] private readonly BuildService _buildService = null!;
+    [Inject] private readonly RunService _runService = null!;
+
     private void OpenContextMenuProject(SharpIdeProjectModel project)
     {
         var menu = new PopupMenu();
@@ -38,7 +44,7 @@ public partial class SolutionExplorerPanel
                 _ = Task.GodotRun(async () =>
                 {
 		            GodotGlobalEvents.Instance.BottomPanelTabExternallySelected.InvokeParallelFireAndForget(BottomPanelType.Run);
-                    await Singletons.RunService.RunProject(project);
+                    await _runService.RunProject(project);
                 });
             }
             if (actionId is ProjectContextMenuOptions.Build)
@@ -63,9 +69,9 @@ public partial class SolutionExplorerPanel
         menu.Position = new Vector2I((int)globalMousePosition.X, (int)globalMousePosition.Y);
         menu.Popup();
     }
-    private static async Task MsBuildProject(SharpIdeProjectModel project, BuildType buildType)
+    private async Task MsBuildProject(SharpIdeProjectModel project, BuildType buildType)
     {
         GodotGlobalEvents.Instance.BottomPanelTabExternallySelected.InvokeParallelFireAndForget(BottomPanelType.Build);
-        await Singletons.BuildService.MsBuildAsync(project.FilePath, buildType);
+        await _buildService.MsBuildAsync(project.FilePath, buildType);
     }
 }

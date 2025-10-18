@@ -2,6 +2,7 @@ using Ardalis.GuardClauses;
 using Godot;
 using SharpIDE.Application.Features.Debugging;
 using SharpIDE.Application.Features.Events;
+using SharpIDE.Application.Features.Run;
 using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
 
 namespace SharpIDE.Godot.Features.Debug_.Tab.SubTabs;
@@ -14,6 +15,8 @@ public partial class ThreadsVariablesSubTab : Control
 	private VBoxContainer _variablesVboxContainer = null!;
 	public SharpIdeProjectModel Project { get; set; } = null!;
 	// private ThreadModel? _selectedThread = null!; // null when not at a stop point
+	
+    [Inject] private readonly RunService _runService = null!;
 
 	public override void _Ready()
 	{
@@ -26,7 +29,7 @@ public partial class ThreadsVariablesSubTab : Control
 
 	private async Task OnDebuggerExecutionStopped(ExecutionStopInfo stopInfo)
 	{
-		var result = await Singletons.RunService.GetInfoAtStopPoint();
+		var result = await _runService.GetInfoAtStopPoint();
 		var threadScenes = result.Threads.Select(s =>
 		{
 			var threadListItem = _threadListItemScene.Instantiate<Control>();

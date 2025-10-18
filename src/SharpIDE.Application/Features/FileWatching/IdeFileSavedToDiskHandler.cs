@@ -9,10 +9,12 @@ namespace SharpIDE.Application.Features.FileWatching;
 
 public class IdeFileSavedToDiskHandler
 {
+	private readonly IdeOpenTabsFileManager _openTabsFileManager;
 	public SharpIdeSolutionModel SolutionModel { get; set; } = null!;
 
-	public IdeFileSavedToDiskHandler()
+	public IdeFileSavedToDiskHandler(IdeOpenTabsFileManager openTabsFileManager)
 	{
+		_openTabsFileManager = openTabsFileManager;
 		GlobalEvents.Instance.IdeFileSavedToDisk.Subscribe(HandleIdeFileChanged);
 	}
 
@@ -40,11 +42,11 @@ public class IdeFileSavedToDiskHandler
 	private async Task HandleWorkspaceFileChanged(SharpIdeFile file)
 	{
 		// TODO: Don't reload from disk if we raised the change event ourselves (e.g. save from IDE). Cleanup this whole disaster
-		var wasOpenAndUpdated = await IdeOpenTabsFileManager.Instance.ReloadFileFromDiskIfOpenInEditor(file);
+		var wasOpenAndUpdated = await _openTabsFileManager.ReloadFileFromDiskIfOpenInEditor(file);
 		if (file.IsRoslynWorkspaceFile)
 		{
 			var fileText = wasOpenAndUpdated ?
-				await IdeOpenTabsFileManager.Instance.GetFileTextAsync(file) :
+				await _openTabsFileManager.GetFileTextAsync(file) :
 				await File.ReadAllTextAsync(file.Path);
 			await RoslynAnalysis.UpdateDocument(file, fileText);
 			GlobalEvents.Instance.SolutionAltered.InvokeParallelFireAndForget();

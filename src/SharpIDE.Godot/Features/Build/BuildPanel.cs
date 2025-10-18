@@ -1,6 +1,7 @@
 using System.Threading.Channels;
 using GDExtensionBindgen;
 using Godot;
+using SharpIDE.Application.Features.Build;
 
 namespace SharpIDE.Godot.Features.Build;
 
@@ -8,10 +9,12 @@ public partial class BuildPanel : Control
 {
     private Terminal _terminal = null!;
     private ChannelReader<string>? _buildOutputChannelReader;
+    
+	[Inject] private readonly BuildService _buildService = null!;
     public override void _Ready()
     {
         _terminal = new Terminal(GetNode<Control>("%Terminal"));
-        Singletons.BuildService.BuildStarted += OnBuildStarted;
+        _buildService.BuildStarted += OnBuildStarted;
     }
 
     public override void _Process(double delta)
@@ -27,6 +30,6 @@ public partial class BuildPanel : Control
     private async Task OnBuildStarted()
     {
         await this.InvokeAsync(() => _terminal.Clear());
-        _buildOutputChannelReader ??= Singletons.BuildService.BuildTextWriter.ConsoleChannel.Reader;
+        _buildOutputChannelReader ??= _buildService.BuildTextWriter.ConsoleChannel.Reader;
     }
 }

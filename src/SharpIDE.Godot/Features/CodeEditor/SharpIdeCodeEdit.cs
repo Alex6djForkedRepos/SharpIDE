@@ -9,6 +9,8 @@ using SharpIDE.Application;
 using SharpIDE.Application.Features.Analysis;
 using SharpIDE.Application.Features.Debugging;
 using SharpIDE.Application.Features.Events;
+using SharpIDE.Application.Features.FilePersistence;
+using SharpIDE.Application.Features.Run;
 using SharpIDE.Application.Features.SolutionDiscovery;
 using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
 using SharpIDE.RazorAccess;
@@ -38,6 +40,10 @@ public partial class SharpIdeCodeEdit : CodeEdit
 	private ImmutableArray<SharpIdeDiagnostic> _projectDiagnosticsForFile = [];
 	private ImmutableArray<CodeAction> _currentCodeActionsInPopup = [];
 	private bool _fileChangingSuppressBreakpointToggleEvent;
+	
+    [Inject] private readonly IdeOpenTabsFileManager _openTabsFileManager = null!;
+    [Inject] private readonly RunService _runService = null!;
+    
 	
 	public override void _Ready()
 	{
@@ -112,7 +118,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		var lineInt = (int)line;
 		var breakpointAdded = IsLineBreakpointed(lineInt);
 		var lineForDebugger = lineInt + 1; // Godot is 0-indexed, Debugging is 1-indexed
-		var breakpoints = Singletons.RunService.Breakpoints.GetOrAdd(_currentFile, []); 
+		var breakpoints = _runService.Breakpoints.GetOrAdd(_currentFile, []); 
 		if (breakpointAdded)
 		{
 			breakpoints.Add(new Breakpoint { Line = lineForDebugger } );
@@ -265,7 +271,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		_ = Task.GodotRun(async () =>
 		{
 			_currentFile.IsDirty.Value = true;
-			await Singletons.OpenTabsFileManager.UpdateFileTextInMemory(_currentFile, Text);
+			await _openTabsFileManager.UpdateFileTextInMemory(_currentFile, Text);
 			await _textChangedCts.CancelAsync(); // Currently the below methods throw, TODO Fix with suppress throwing, and handle
 			_textChangedCts.Dispose();
 			_textChangedCts = new CancellationTokenSource();
@@ -298,7 +304,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 			// TODO: This can be more efficient - we can just update in memory and proceed with highlighting etc. Save to disk in background.
 			foreach (var (affectedFile, updatedText) in affectedFiles)
 			{
-				await Singletons.OpenTabsFileManager.UpdateInMemoryIfOpenAndSaveAsync(affectedFile, updatedText);
+				await _openTabsFileManager.UpdateInMemoryIfOpenAndSaveAsync(affectedFile, updatedText);
 				affectedFile.FileContentsChangedExternally.InvokeParallelFireAndForget();
 			}
 		});
@@ -306,7 +312,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 
 	private async Task OnFileChangedExternallyInMemory()
 	{
-		var fileContents = await Singletons.OpenTabsFileManager.GetFileTextAsync(_currentFile);
+		var fileContents = await _openTabsFileManager.GetFileTextAsync(_currentFile);
 		var syntaxHighlighting = RoslynAnalysis.GetDocumentSyntaxHighlighting(_currentFile);
 		var razorSyntaxHighlighting = RoslynAnalysis.GetRazorDocumentSyntaxHighlighting(_currentFile);
 		var diagnostics = RoslynAnalysis.GetDocumentDiagnostics(_currentFile);
@@ -341,7 +347,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 	{
 		await Task.CompletedTask.ConfigureAwait(ConfigureAwaitOptions.ForceYielding); // get off the UI thread
 		_currentFile = file;
-		var readFileTask = Singletons.OpenTabsFileManager.GetFileTextAsync(file);
+		var readFileTask = _openTabsFileManager.GetFileTextAsync(file);
 		_currentFile.FileContentsChangedExternally.Subscribe(OnFileChangedExternallyInMemory);
 		_currentFile.FileContentsChangedExternallyFromDisk.Subscribe(OnFileChangedExternallyFromDisk);
 		
@@ -365,7 +371,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 
 	private async Task OnFileChangedExternallyFromDisk()
 	{
-		await Singletons.OpenTabsFileManager.ReloadFileFromDisk(_currentFile);
+		await _openTabsFileManager.ReloadFileFromDisk(_currentFile);
 		await OnFileChangedExternallyInMemory();
 	}
 
@@ -432,14 +438,14 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		{
 			_ = Task.GodotRun(async () =>
 			{
-				await Singletons.OpenTabsFileManager.SaveAllOpenFilesAsync();
+				await _openTabsFileManager.SaveAllOpenFilesAsync();
 			});
 		}
 		else if (@event.IsActionPressed(InputStringNames.SaveFile))
 		{
 			_ = Task.GodotRun(async () =>
 			{
-				await Singletons.OpenTabsFileManager.SaveFileAsync(_currentFile);
+				await _openTabsFileManager.SaveFileAsync(_currentFile);
 			});
 		}
 	}

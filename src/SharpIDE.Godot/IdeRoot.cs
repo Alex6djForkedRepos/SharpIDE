@@ -1,6 +1,4 @@
 using Godot;
-using Microsoft.Build.Locator;
-using Microsoft.Extensions.Hosting;
 using SharpIDE.Application.Features.Analysis;
 using SharpIDE.Application.Features.Build;
 using SharpIDE.Application.Features.Events;
@@ -40,19 +38,22 @@ public partial class IdeRoot : Control
 	private readonly PackedScene _runMenuItemScene = ResourceLoader.Load<PackedScene>("res://Features/Run/RunMenuItem.tscn");
 	private TaskCompletionSource _nodeReadyTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
+	[Inject] private readonly IdeFileSavedToDiskHandler _savedToDiskHandler = null!;
+	[Inject] private readonly IdeFileExternalChangeHandler _fileExternalChangeHandler = null!;
+	[Inject] private readonly IdeFileWatcher _fileWatcher = null!;
+	[Inject] private readonly BuildService _buildService = null!;
+
 	public override void _EnterTree()
 	{
 		GodotGlobalEvents.Instance = new GodotGlobalEvents();
 		GlobalEvents.Instance = new GlobalEvents();
 		BuildService.Instance = new BuildService(); // TODO: Sort out this mess with singletons, especially access across Application services
 		IdeOpenTabsFileManager.Instance = new IdeOpenTabsFileManager();
-		Singletons.RunService = new RunService();
-		Singletons.BuildService = BuildService.Instance;
-		Singletons.FileWatcher?.Dispose();
-		Singletons.FileWatcher = new IdeFileWatcher();
-		Singletons.OpenTabsFileManager = IdeOpenTabsFileManager.Instance;
-		Singletons.FileExternalChangeHandler = new IdeFileExternalChangeHandler();
-		Singletons.FileSavedToDiskHandler = new IdeFileSavedToDiskHandler();
+	}
+
+	public override void _ExitTree()
+	{
+		_fileWatcher.Dispose();
 	}
 
 	public override void _Ready()
@@ -94,22 +95,22 @@ public partial class IdeRoot : Control
 	private async void OnBuildSlnButtonPressed()
 	{
 		GodotGlobalEvents.Instance.BottomPanelTabExternallySelected.InvokeParallelFireAndForget(BottomPanelType.Build);
-		await Singletons.BuildService.MsBuildAsync(_solutionExplorerPanel.SolutionModel.FilePath);
+		await _buildService.MsBuildAsync(_solutionExplorerPanel.SolutionModel.FilePath);
 	}
 	private async void OnRebuildSlnButtonPressed()
 	{
 		GodotGlobalEvents.Instance.BottomPanelTabExternallySelected.InvokeParallelFireAndForget(BottomPanelType.Build);
-		await Singletons.BuildService.MsBuildAsync(_solutionExplorerPanel.SolutionModel.FilePath, BuildType.Rebuild);
+		await _buildService.MsBuildAsync(_solutionExplorerPanel.SolutionModel.FilePath, BuildType.Rebuild);
 	}
 	private async void OnCleanSlnButtonPressed()
 	{
 		GodotGlobalEvents.Instance.BottomPanelTabExternallySelected.InvokeParallelFireAndForget(BottomPanelType.Build);
-		await Singletons.BuildService.MsBuildAsync(_solutionExplorerPanel.SolutionModel.FilePath, BuildType.Clean);
+		await _buildService.MsBuildAsync(_solutionExplorerPanel.SolutionModel.FilePath, BuildType.Clean);
 	}
 	private async void OnRestoreSlnButtonPressed()
 	{
 		GodotGlobalEvents.Instance.BottomPanelTabExternallySelected.InvokeParallelFireAndForget(BottomPanelType.Build);
-		await Singletons.BuildService.MsBuildAsync(_solutionExplorerPanel.SolutionModel.FilePath, BuildType.Restore);
+		await _buildService.MsBuildAsync(_solutionExplorerPanel.SolutionModel.FilePath, BuildType.Restore);
 	}
 
 	private async Task OnSolutionExplorerPanelOnFileSelected(SharpIdeFile file, SharpIdeFileLinePosition? fileLinePosition)
@@ -129,11 +130,11 @@ public partial class IdeRoot : Control
 			_bottomPanelManager.Solution = solutionModel;
 			_searchWindow.Solution = solutionModel;
 			_searchAllFilesWindow.Solution = solutionModel;
-			Singletons.FileExternalChangeHandler.SolutionModel = solutionModel;
-			Singletons.FileSavedToDiskHandler.SolutionModel = solutionModel;
+			_fileExternalChangeHandler.SolutionModel = solutionModel;
+			_savedToDiskHandler.SolutionModel = solutionModel;
 			Callable.From(_solutionExplorerPanel.RepopulateTree).CallDeferred();
 			RoslynAnalysis.StartSolutionAnalysis(solutionModel);
-			Singletons.FileWatcher.StartWatching(solutionModel);
+			_fileWatcher.StartWatching(solutionModel);
 			
 			var infraProject = solutionModel.AllProjects.SingleOrDefault(s => s.Name == "WebUi");
 			var diFile = infraProject?.Folders.Single(s => s.Name == "Pages").Files.Single(s => s.Name == "TestPage.razor");
