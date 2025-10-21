@@ -34,14 +34,26 @@ public class IdeFileOperationsService(SharpIdeSolutionModificationService sharpI
 		await _sharpIdeSolutionModificationService.RemoveFile(file);
 	}
 
+	// TODO: Pass class/interface/enum type to create different templates
 	public async Task<SharpIdeFile> CreateCsFile(IFolderOrProject parentNode, string newFileName)
 	{
 		var newFilePath = Path.Combine(GetFileParentNodePath(parentNode), newFileName);
+		if (File.Exists(newFilePath)) throw new InvalidOperationException($"File {newFilePath} already exists.");
 		var className = Path.GetFileNameWithoutExtension(newFileName);
 		var @namespace = NewFileTemplates.ComputeNamespace(parentNode);
 		var fileText = NewFileTemplates.CsharpClass(className, @namespace);
 		await File.WriteAllTextAsync(newFilePath, fileText);
 		var sharpIdeFile = await _sharpIdeSolutionModificationService.CreateFile(parentNode, newFilePath, newFileName, fileText);
+		return sharpIdeFile;
+	}
+
+	public async Task<SharpIdeFile> CopyFile(IFolderOrProject destinationParentNode, string sourceFilePath, string newFileName)
+	{
+		var newFilePath = Path.Combine(GetFileParentNodePath(destinationParentNode), newFileName);
+		if (File.Exists(newFilePath)) throw new InvalidOperationException($"File {newFilePath} already exists.");
+		var fileContents = await File.ReadAllTextAsync(sourceFilePath);
+		File.Copy(sourceFilePath, newFilePath);
+		var sharpIdeFile = await _sharpIdeSolutionModificationService.CreateFile(destinationParentNode, newFilePath, newFileName, fileContents);
 		return sharpIdeFile;
 	}
 

@@ -27,11 +27,64 @@ public partial class SolutionExplorerPanel : MarginContainer
 	public SharpIdeSolutionModel SolutionModel { get; set; } = null!;
 	private Tree _tree = null!;
 	private TreeItem _rootItem = null!;
+	private enum ClipboardOperation { Cut, Copy }
+	private (SharpIdeFile, ClipboardOperation)? _itemOnClipboard;
 	public override void _Ready()
 	{
 		_tree = GetNode<Tree>("Tree");
 		_tree.ItemMouseSelected += TreeOnItemMouseSelected;
 		GodotGlobalEvents.Instance.FileExternallySelected.Subscribe(OnFileExternallySelected);
+	}
+
+	public override void _UnhandledKeyInput(InputEvent @event)
+	{
+		// Copy
+		if (@event is InputEventKey { Pressed: true, Keycode: Key.C, CtrlPressed: true })
+		{
+			var selected = _tree.GetSelected();
+			if (selected is null) return;
+			var genericMetadata = selected.GetMetadata(0).As<RefCounted?>();
+			if (genericMetadata is RefCountedContainer<SharpIdeFile> fileContainer)
+			{
+				_itemOnClipboard = (fileContainer.Item, ClipboardOperation.Copy);
+			}
+		}
+		// Cut
+		else if (@event is InputEventKey { Pressed: true, Keycode: Key.X, CtrlPressed: true })
+		{
+			var selected = _tree.GetSelected();
+			if (selected is null) return;
+			var genericMetadata = selected.GetMetadata(0).As<RefCounted?>();
+			if (genericMetadata is RefCountedContainer<SharpIdeFile> fileContainer)
+			{
+				_itemOnClipboard = (fileContainer.Item, ClipboardOperation.Cut);
+			}
+		}
+		// Paste
+		else if (@event is InputEventKey { Pressed: true, Keycode: Key.V, CtrlPressed: true })
+		{
+			var selected = _tree.GetSelected();
+			if (selected is null || _itemOnClipboard is null) return;
+			var genericMetadata = selected.GetMetadata(0).As<RefCounted?>();
+			IFolderOrProject? folderOrProject = genericMetadata switch
+			{
+				RefCountedContainer<SharpIdeFolder> f => f.Item,
+				RefCountedContainer<SharpIdeProjectModel> p => p.Item,
+				_ => null
+			};
+			if (folderOrProject is null) return;
+			
+			var (fileToPaste, operation) = _itemOnClipboard.Value;
+			_itemOnClipboard = null;
+			_ = Task.GodotRun(async () =>
+			{
+				if (operation is ClipboardOperation.Copy)
+				{
+					await _ideFileOperationsService.CopyFile(folderOrProject, fileToPaste.Path, fileToPaste.Name);
+				}
+			});
+			
+		}
 	}
 
 	private void TreeOnItemMouseSelected(Vector2 mousePosition, long mouseButtonIndex)
