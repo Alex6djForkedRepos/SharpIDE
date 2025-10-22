@@ -160,12 +160,11 @@ public partial class IdeRoot : Control
 				// Preserves order of tabs
 				foreach (var (file, linePosition, isSelected) in filesToOpen)
 				{
-					GodotGlobalEvents.Instance.FileExternallySelected.InvokeParallelFireAndForget(file, linePosition);
-					await Task.Delay(10).ConfigureAwait(false); // TODO: Do this properly - use InvokeParallelAsync, and fix FileExternallySelected waiting on syntax highlighting etc before returning
+					await GodotGlobalEvents.Instance.FileExternallySelected.InvokeParallelAsync(file, linePosition);
 				}
 				// Select the selected tab
 				var selectedFile = filesToOpen.SingleOrDefault(f => f.IsSelected);
-				if (selectedFile.Item1 is not null) GodotGlobalEvents.Instance.FileExternallySelected.InvokeParallelFireAndForget(selectedFile.Item1, selectedFile.Item2);
+				if (selectedFile.Item1 is not null) await GodotGlobalEvents.Instance.FileExternallySelected.InvokeParallelAsync(selectedFile.Item1, selectedFile.Item2);
 			});
 				
 			var tasks = solutionModel.AllProjects.Select(p => p.MsBuildEvaluationProjectTask).ToList();

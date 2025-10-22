@@ -353,12 +353,15 @@ public partial class SharpIdeCodeEdit : CodeEdit
 			_fileChangingSuppressBreakpointToggleEvent = false;
 			if (fileLinePosition is not null) SetFileLinePosition(fileLinePosition.Value);
 		});
-		await Task.WhenAll(syntaxHighlighting, razorSyntaxHighlighting, setTextTask); // Text must be set before setting syntax highlighting
-		await this.InvokeAsync(async () => SetSyntaxHighlightingModel(await syntaxHighlighting, await razorSyntaxHighlighting));
-		await diagnostics;
-		await this.InvokeAsync(async () => SetDiagnostics(await diagnostics));
-		await projectDiagnosticsForFile;
-		await this.InvokeAsync(async () => SetProjectDiagnostics(await projectDiagnosticsForFile));
+		_ = Task.GodotRun(async () =>
+		{
+			await Task.WhenAll(syntaxHighlighting, razorSyntaxHighlighting, setTextTask); // Text must be set before setting syntax highlighting
+			await this.InvokeAsync(async () => SetSyntaxHighlightingModel(await syntaxHighlighting, await razorSyntaxHighlighting));
+			await diagnostics;
+			await this.InvokeAsync(async () => SetDiagnostics(await diagnostics));
+			await projectDiagnosticsForFile;
+			await this.InvokeAsync(async () => SetProjectDiagnostics(await projectDiagnosticsForFile));
+		});
 	}
 
 	public void UnderlineRange(int line, int caretStartCol, int caretEndCol, Color color, float thickness = 1.5f)
