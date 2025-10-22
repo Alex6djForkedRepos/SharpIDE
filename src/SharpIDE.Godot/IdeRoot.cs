@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Godot;
 using SharpIDE.Application.Features.Analysis;
 using SharpIDE.Application.Features.Build;
@@ -91,7 +92,10 @@ public partial class IdeRoot : Control
 	// TODO: Problematic, as this is called even when the focus shifts to an embedded subwindow, such as a popup 
 	private void OnFocusExited()
 	{
-		_ = Task.GodotRun(async () => await _openTabsFileManager.SaveAllOpenFilesAsync());
+		if (Debugger.IsAttached is false)
+		{
+			_ = Task.GodotRun(async () => await _openTabsFileManager.SaveAllOpenFilesAsync());
+		}
 	}
 
 	private void OnRunMenuButtonPressed()

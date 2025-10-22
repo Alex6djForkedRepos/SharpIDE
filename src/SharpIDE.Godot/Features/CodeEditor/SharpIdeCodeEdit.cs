@@ -42,6 +42,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 	private ImmutableArray<SharpIdeDiagnostic> _projectDiagnosticsForFile = [];
 	private ImmutableArray<CodeAction> _currentCodeActionsInPopup = [];
 	private bool _fileChangingSuppressBreakpointToggleEvent;
+	private bool _settingWholeDocumentTextSuppressLineEditsEvent; // A dodgy workaround - setting the whole document doesn't guarantee that the line count stayed the same etc. We are still going to have broken highlighting. TODO: Investigate getting minimal text change ranges, and change those ranges only
 	
     [Inject] private readonly IdeOpenTabsFileManager _openTabsFileManager = null!;
     [Inject] private readonly RunService _runService = null!;
@@ -99,6 +100,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 	private void OnLinesEditedFrom(long fromLine, long toLine)
 	{
 		if (fromLine == toLine) return;
+		if (_settingWholeDocumentTextSuppressLineEditsEvent) return;
 		var fromLineText = GetLine((int)fromLine);
 		var caretPosition = this.GetCaretPosition();
 		var textFrom0ToCaret = fromLineText[..caretPosition.col];
@@ -304,17 +306,19 @@ public partial class SharpIdeCodeEdit : CodeEdit
 	private async Task OnFileChangedExternally(SharpIdeFileLinePosition? linePosition)
 	{
 		var fileContents = await _openTabsFileManager.GetFileTextAsync(_currentFile);
-		Callable.From(() =>
+		await this.InvokeAsync(() =>
 		{
 			(int line, int col) currentCaretPosition = linePosition is null ? GetCaretPosition() : (linePosition.Value.Line, linePosition.Value.Column);
 			var vScroll = GetVScroll();
 			BeginComplexOperation();
+			_settingWholeDocumentTextSuppressLineEditsEvent = true;
 			SetText(fileContents);
+			_settingWholeDocumentTextSuppressLineEditsEvent = false;
 			SetCaretLine(currentCaretPosition.line);
 			SetCaretColumn(currentCaretPosition.col);
 			SetVScroll(vScroll);
 			EndComplexOperation();
-		}).CallDeferred();
+		});
 	}
 
 	public void SetFileLinePosition(SharpIdeFileLinePosition fileLinePosition)
