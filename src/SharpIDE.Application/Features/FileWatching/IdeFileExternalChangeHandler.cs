@@ -1,4 +1,5 @@
 ﻿using Ardalis.GuardClauses;
+using Microsoft.Extensions.Logging;
 using SharpIDE.Application.Features.Events;
 using SharpIDE.Application.Features.SolutionDiscovery;
 using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
@@ -7,11 +8,13 @@ namespace SharpIDE.Application.Features.FileWatching;
 
 public class IdeFileExternalChangeHandler
 {
+	private readonly ILogger<IdeFileExternalChangeHandler> _logger;
 	private readonly FileChangedService _fileChangedService;
 	private readonly SharpIdeSolutionModificationService _sharpIdeSolutionModificationService;
 	public SharpIdeSolutionModel SolutionModel { get; set; } = null!;
-	public IdeFileExternalChangeHandler(FileChangedService fileChangedService, SharpIdeSolutionModificationService sharpIdeSolutionModificationService)
+	public IdeFileExternalChangeHandler(FileChangedService fileChangedService, SharpIdeSolutionModificationService sharpIdeSolutionModificationService, ILogger<IdeFileExternalChangeHandler> logger)
 	{
+		_logger = logger;
 		_fileChangedService = fileChangedService;
 		_sharpIdeSolutionModificationService = sharpIdeSolutionModificationService;
 		GlobalEvents.Instance.FileSystemWatcherInternal.FileChanged.Subscribe(OnFileChanged);
@@ -72,14 +75,13 @@ public class IdeFileExternalChangeHandler
 		var sharpIdeFolder = SolutionModel.AllFolders.SingleOrDefault(f => f.Path == folderPath);
 		if (sharpIdeFolder is not null)
 		{
-			//Console.WriteLine($"Error - Folder {folderPath} already exists");
 			return;
 		}
 		var containingFolderPath = Path.GetDirectoryName(folderPath)!;
 		var containingFolderOrProject = (IFolderOrProject?)SolutionModel.AllFolders.SingleOrDefault(f => f.ChildNodeBasePath == containingFolderPath) ?? SolutionModel.AllProjects.SingleOrDefault(s => s.ChildNodeBasePath == containingFolderPath);
 		if (containingFolderOrProject is null)
 		{
-			Console.WriteLine($"Error - Containing Folder or Project of {folderPath} does not exist");
+			_logger.LogError("Containing Folder or Project of folder '{FolderPath}' does not exist", folderPath);
 			return;
 		}
 		var folderName = Path.GetFileName(folderPath);
@@ -101,7 +103,7 @@ public class IdeFileExternalChangeHandler
 		var containingFolderOrProject = (IFolderOrProject?)SolutionModel.AllFolders.SingleOrDefault(f => f.ChildNodeBasePath == createdFileDirectory) ?? SolutionModel.AllProjects.SingleOrDefault(s => s.ChildNodeBasePath == createdFileDirectory);
 		if (containingFolderOrProject is null)
 		{
-			Console.WriteLine($"Error - Containing Folder or Project of {filePath} does not exist");
+			_logger.LogError("Containing Folder or Project of file '{FilePath}' does not exist", filePath);
 			return;
 		}
 
@@ -122,11 +124,11 @@ public class IdeFileExternalChangeHandler
 			var now = DateTimeOffset.Now;
 			if (now - sharpIdeFile.LastIdeWriteTime.Value < TimeSpan.FromMilliseconds(300))
 			{
-				Console.WriteLine($"IdeFileExternalChangeHandler: Ignored - {filePath}");
+				_logger.LogTrace("File change ignored - recently modified by the IDE: '{FilePath}'", filePath);
 				return;
 			}
 		}
-		Console.WriteLine($"IdeFileExternalChangeHandler: Changed - {filePath}");
+		_logger.LogInformation("IdeFileExternalChangeHandler: Changed - '{FilePath}'", filePath);
 		var file = SolutionModel.AllFiles.SingleOrDefault(f => f.Path == filePath);
 		if (file is not null)
 		{
