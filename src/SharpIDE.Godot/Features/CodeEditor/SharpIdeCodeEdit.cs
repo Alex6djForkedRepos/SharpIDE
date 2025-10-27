@@ -220,8 +220,11 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		var column = fileLinePosition.Column;
 		SetCaretLine(line);
 		SetCaretColumn(column);
-		CenterViewportToCaret();
-		GrabFocus();
+		Callable.From(() =>
+		{
+			GrabFocus();
+			CenterViewportToCaret();
+		}).CallDeferred();
 	}
 
 	// TODO: Ensure not running on UI thread
