@@ -7,13 +7,15 @@ public partial class SharpIdeCodeEdit
 {
     private readonly Texture2D _csharpMethodIcon = ResourceLoader.Load<Texture2D>("uid://b17p18ijhvsep");
     private readonly Texture2D _csharpClassIcon = ResourceLoader.Load<Texture2D>("uid://b027uufaewitj");
+    private readonly Texture2D _csharpInterfaceIcon = ResourceLoader.Load<Texture2D>("uid://bdwmkdweqvowt");
 
-    private Texture2D? GetIconForSymbolKind(SymbolKind? symbolKind)
+    private Texture2D? GetIconForCompletion(SymbolKind? symbolKind, TypeKind? typeKind, Accessibility? accessibility)
     {
-        var texture = symbolKind switch
+        var texture = (symbolKind, typeKind, accessibility) switch
         {
-            SymbolKind.Method => _csharpMethodIcon,
-            SymbolKind.NamedType => _csharpClassIcon,
+            (SymbolKind.Method, _, _) => _csharpMethodIcon,
+            (SymbolKind.NamedType, TypeKind.Interface, _) => _csharpInterfaceIcon,
+            (SymbolKind.NamedType, _, _) => _csharpClassIcon,
             //SymbolKind.Local => ,
             //SymbolKind.Property => ,
             //SymbolKind.Field => ,

@@ -443,6 +443,10 @@ public partial class SharpIdeCodeEdit : CodeEdit
 				{
 					var symbolKindString = CollectionExtensions.GetValueOrDefault(completionItem.Properties, "SymbolKind");
 					var symbolKind = symbolKindString is null ? null : (SymbolKind?)int.Parse(symbolKindString);
+					var typeKindString = completionItem.Tags[0];
+					var accessibilityModifierString = completionItem.Tags.Skip(1).FirstOrDefault(); // accessibility is not always supplied
+					TypeKind? typeKind = Enum.TryParse<TypeKind>(typeKindString, out var tk) ? tk : null;
+					Accessibility? accessibilityModifier = Enum.TryParse<Accessibility>(accessibilityModifierString, out var am) ? am : null;
 					var godotCompletionType = symbolKind switch
 					{
 						SymbolKind.Method => CodeCompletionKind.Function,
@@ -452,7 +456,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 						SymbolKind.Field => CodeCompletionKind.Member,
 						_ => CodeCompletionKind.PlainText
 					};
-					var icon = GetIconForSymbolKind(symbolKind);
+					var icon = GetIconForCompletion(symbolKind, typeKind, accessibilityModifier);
 					AddCodeCompletionOption(godotCompletionType, completionItem.DisplayText, completionItem.DisplayText, icon: icon, value: new RefCountedContainer<CompletionItem>(completionItem));
 				}
 				// partially working - displays menu only when caret is what CodeEdit determines as valid
