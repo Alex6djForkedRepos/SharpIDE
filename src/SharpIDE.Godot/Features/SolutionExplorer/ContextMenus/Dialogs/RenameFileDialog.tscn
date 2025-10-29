@@ -4,7 +4,7 @@
 
 [node name="RenameFileDialog" type="ConfirmationDialog"]
 oversampling_override = 1.0
-title = "Rename: Directory"
+title = "Rename: File"
 position = Vector2i(0, 36)
 size = Vector2i(405, 115)
 visible = true
@@ -23,4 +23,4 @@ text = "Enter name:"
 [node name="FileNameLineEdit" type="LineEdit" parent="VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "ExistingDirectoryName"
+text = "ExistingFileName.cs"
