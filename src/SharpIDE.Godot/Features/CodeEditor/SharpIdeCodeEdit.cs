@@ -395,7 +395,11 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		}
 		// Now we filter to only the focused tab
 		if (HasFocus() is false) return;
-		if (@event.IsActionPressed(InputStringNames.CodeFixes))
+		if (@event.IsActionPressed(InputStringNames.RenameSymbol))
+		{
+			_ = Task.GodotRun(async () => await RenameSymbol());
+		}
+		else if (@event.IsActionPressed(InputStringNames.CodeFixes))
 		{
 			EmitSignalCodeFixesRequested();
 		}
@@ -407,8 +411,6 @@ public partial class SharpIdeCodeEdit : CodeEdit
 			});
 		}
 	}
-
-	
 
 	private readonly Color _breakpointLineColor = new Color("3a2323");
 	private readonly Color _executingLineColor = new Color("665001");

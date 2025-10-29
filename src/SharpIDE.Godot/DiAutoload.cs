@@ -31,6 +31,7 @@ public partial class DiAutoload : Node
         services.AddScoped<SearchService>();
         services.AddScoped<IdeFileExternalChangeHandler>();
         services.AddScoped<IdeCodeActionService>();
+        services.AddScoped<IdeRenameService>();
         services.AddScoped<IdeApplyCompletionService>();
         services.AddScoped<FileChangedService>();
         services.AddScoped<DotnetUserSecretsService>();
