@@ -5,7 +5,10 @@ namespace SharpIDE.Application.Features.NavigationHistory;
 
 public class IdeNavigationHistoryService
 {
-	private readonly Stack<IdeNavigationLocation> _backStack = new();
+	private const int MaxHistorySize = 100;
+
+	// Using LinkedList for back stack to efficiently remove oldest entries
+	private readonly LinkedList<IdeNavigationLocation> _backStack = new();
 	private IdeNavigationLocation? _current;
 	private readonly Stack<IdeNavigationLocation> _forwardStack = new();
 
@@ -27,7 +30,8 @@ public class IdeNavigationHistoryService
 		}
 		if (_current is not null)
 		{
-			_backStack.Push(_current);
+			_backStack.AddLast(_current);
+			if (_backStack.Count > MaxHistorySize) _backStack.RemoveFirst();
 		}
 		_current = location;
 		_forwardStack.Clear();
@@ -40,7 +44,8 @@ public class IdeNavigationHistoryService
 		{
 			_forwardStack.Push(_current);
 		}
-		_current = _backStack.Pop();
+		_current = _backStack.Last();
+		_backStack.RemoveLast();
 	}
 
 	public void GoForward()
@@ -48,7 +53,7 @@ public class IdeNavigationHistoryService
 		if (!CanGoForward) throw new InvalidOperationException("Cannot go forward, no history available.");
 		if (_current is not null)
 		{
-			_backStack.Push(_current);
+			_backStack.AddLast(_current);
 		}
 
 		_current = _forwardStack.Pop();
