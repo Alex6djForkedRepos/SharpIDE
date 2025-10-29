@@ -3,6 +3,7 @@ using Godot;
 using Microsoft.CodeAnalysis;
 using ObservableCollections;
 using R3;
+using SharpIDE.Application.Features.Analysis;
 using SharpIDE.Application.Features.SolutionDiscovery;
 using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
 using SharpIDE.Godot.Features.Common;
@@ -117,8 +118,9 @@ public partial class ProblemsPanel : Control
     
     private void OpenDocumentContainingDiagnostic(Diagnostic diagnostic)
     {
-        var filePath = diagnostic.Location.SourceTree?.GetMappedLineSpan(diagnostic.Location.SourceSpan).Path;
-        var file = Solution!.AllFiles.Single(f => f.Path == filePath);
-        GodotGlobalEvents.Instance.FileExternallySelected.InvokeParallelFireAndForget(file, null);
+        var fileLinePositionSpan = diagnostic.Location.GetMappedLineSpan();
+        var file = Solution!.AllFiles.Single(f => f.Path == fileLinePositionSpan.Path);
+        var linePosition = new SharpIdeFileLinePosition(fileLinePositionSpan.StartLinePosition.Line, fileLinePositionSpan.StartLinePosition.Character);
+        GodotGlobalEvents.Instance.FileExternallySelected.InvokeParallelFireAndForget(file, linePosition);
     }
 }
