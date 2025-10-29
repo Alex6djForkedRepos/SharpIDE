@@ -42,6 +42,13 @@ public partial class SharpIdeCodeEdit
         symbolNameHoverWindow.Transient = true;
         symbolNameHoverWindow.TransientToFocused = true;
         symbolNameHoverWindow.Unfocusable = true;
+        symbolNameHoverWindow.WindowInput += (inputEvent) =>
+        {
+            if (inputEvent is InputEventMouseButton mouseButtonEvent && mouseButtonEvent.Pressed)
+            {
+                CloseSymbolHoverWindow();
+            }
+        };
         // To debug location, make type a PopupPanel, and uncomment
         //symbolNameHoverWindow.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = new Color(1, 0, 0, 0.5f) });
 
