@@ -13,13 +13,24 @@ public class SharpIdeSolutionModificationService(FileChangedService fileChangedS
 	public SharpIdeSolutionModel SolutionModel { get; set; } = null!;
 
 	/// The directory must already exist on disk
-	public async Task<SharpIdeFolder> AddDirectory(IFolderOrProject parentFolder, string directoryName)
+	public async Task<SharpIdeFolder> AddDirectory(IFolderOrProject parentNode, string directoryName)
 	{
-		var addedDirectoryPath = Path.Combine(parentFolder.ChildNodeBasePath, directoryName);
+		var addedDirectoryPath = Path.Combine(parentNode.ChildNodeBasePath, directoryName);
 		var allFiles = new ConcurrentBag<SharpIdeFile>();
 		var allFolders = new ConcurrentBag<SharpIdeFolder>();
-		var sharpIdeFolder = new SharpIdeFolder(new DirectoryInfo(addedDirectoryPath), parentFolder, allFiles, allFolders);
-		parentFolder.Folders.Add(sharpIdeFolder);
+		var sharpIdeFolder = new SharpIdeFolder(new DirectoryInfo(addedDirectoryPath), parentNode, allFiles, allFolders);
+
+		var correctInsertionPosition = parentNode.Folders.list.BinarySearch(sharpIdeFolder, SharpIdeFolderComparer.Instance);
+		if (correctInsertionPosition < 0)
+		{
+			correctInsertionPosition = ~correctInsertionPosition;
+		}
+		else
+		{
+			throw new InvalidOperationException("Folder already exists in the containing folder or project");
+		}
+
+		parentNode.Folders.Insert(correctInsertionPosition, sharpIdeFolder);
 		SolutionModel.AllFolders.AddRange((IEnumerable<SharpIdeFolder>)[sharpIdeFolder, ..allFolders]);
 		SolutionModel.AllFiles.AddRange(allFiles);
 		foreach (var file in allFiles)

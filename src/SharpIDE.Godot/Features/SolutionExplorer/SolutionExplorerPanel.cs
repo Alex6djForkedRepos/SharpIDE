@@ -225,7 +225,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 		foldersView.ObserveChanged()
 			.SubscribeAwait(async (innerEvent, ct) => await (innerEvent.Action switch
 			{
-				NotifyCollectionChangedAction.Add => this.InvokeAsync(() => innerEvent.NewItem.View.Value = CreateFolderTreeItem(_tree, projectItem, innerEvent.NewItem.Value)),
+				NotifyCollectionChangedAction.Add => this.InvokeAsync(() => innerEvent.NewItem.View.Value = CreateFolderTreeItem(_tree, projectItem, innerEvent.NewItem.Value, innerEvent.NewStartingIndex)),
 				NotifyCollectionChangedAction.Remove => FreeTreeItem(innerEvent.OldItem.View.Value),
 				_ => Task.CompletedTask
 			})).AddTo(this);
@@ -244,9 +244,9 @@ public partial class SolutionExplorerPanel : MarginContainer
 	}
 
 	[RequiresGodotUiThread]
-	private TreeItem CreateFolderTreeItem(Tree tree, TreeItem parent, SharpIdeFolder sharpIdeFolder)
+	private TreeItem CreateFolderTreeItem(Tree tree, TreeItem parent, SharpIdeFolder sharpIdeFolder, int newStartingIndex = -1)
 	{
-		var folderItem = tree.CreateItem(parent);
+		var folderItem = tree.CreateItem(parent, newStartingIndex);
 		folderItem.SetText(0, sharpIdeFolder.Name);
 		folderItem.SetIcon(0, FolderIcon);
 		folderItem.SetMetadata(0, new RefCountedContainer<SharpIdeFolder>(sharpIdeFolder));
@@ -264,7 +264,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 		subFoldersView.ObserveChanged()
 			.SubscribeAwait(async (innerEvent, ct) => await (innerEvent.Action switch
 			{
-				NotifyCollectionChangedAction.Add => this.InvokeAsync(() => innerEvent.NewItem.View.Value = CreateFolderTreeItem(_tree, folderItem, innerEvent.NewItem.Value)),
+				NotifyCollectionChangedAction.Add => this.InvokeAsync(() => innerEvent.NewItem.View.Value = CreateFolderTreeItem(_tree, folderItem, innerEvent.NewItem.Value, innerEvent.NewStartingIndex)),
 				NotifyCollectionChangedAction.Remove => FreeTreeItem(innerEvent.OldItem.View.Value),
 				_ => Task.CompletedTask
 			})).AddTo(this);
