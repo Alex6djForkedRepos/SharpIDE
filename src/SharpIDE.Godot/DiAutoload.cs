@@ -9,6 +9,7 @@ using SharpIDE.Application.Features.Evaluation;
 using SharpIDE.Application.Features.FilePersistence;
 using SharpIDE.Application.Features.FileWatching;
 using SharpIDE.Application.Features.NavigationHistory;
+using SharpIDE.Application.Features.Nuget;
 using SharpIDE.Application.Features.Run;
 using SharpIDE.Application.Features.Search;
 
@@ -36,6 +37,7 @@ public partial class DiAutoload : Node
         services.AddScoped<IdeApplyCompletionService>();
         services.AddScoped<FileChangedService>();
         services.AddScoped<DotnetUserSecretsService>();
+        services.AddScoped<NugetClientService>();
         services.AddScoped<IdeFileWatcher>();
         services.AddScoped<IdeNavigationHistoryService>();
         services.AddScoped<IdeOpenTabsFileManager>();

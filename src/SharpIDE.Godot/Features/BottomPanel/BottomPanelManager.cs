@@ -18,6 +18,7 @@ public partial class BottomPanelManager : Panel
         {
             field = value;
             _problemsPanel.Solution = value;
+            _nugetPanel.Solution = value;
         }
     }
 
