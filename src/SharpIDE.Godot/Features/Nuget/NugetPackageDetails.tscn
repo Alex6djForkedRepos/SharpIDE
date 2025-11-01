@@ -1,5 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://odaefch2sdft"]
+[gd_scene load_steps=3 format=3 uid="uid://odaefch2sdft"]
 
+[ext_resource type="Script" uid="uid://d1v1v4uqdu2rw" path="res://Features/Nuget/NugetPackageDetails.cs" id="1_c3hm2"]
 [ext_resource type="Texture2D" uid="uid://b5ih61vdjv5e6" path="res://Features/LeftSideBar/Resources/Nuget.svg" id="1_jrdf0"]
 
 [node name="NugetPackageDetails" type="VBoxContainer"]
@@ -8,6 +9,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_c3hm2")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2

@@ -10,7 +10,7 @@ public partial class NugetPanel : Control
     private VBoxContainer _implicitlyInstalledPackagesItemList = null!;
     private VBoxContainer _availablePackagesItemList = null!;
     
-    private VBoxContainer _packageDetailsVBoxContainer = null!;
+    private NugetPackageDetails _nugetPackageDetails = null!;
     
     public SharpIdeSolutionModel? Solution { get; set; }
     
@@ -25,8 +25,8 @@ public partial class NugetPanel : Control
         _installedPackagesVboxContainer = GetNode<VBoxContainer>("%InstalledPackagesVBoxContainer");
         _implicitlyInstalledPackagesItemList = GetNode<VBoxContainer>("%ImplicitlyInstalledPackagesVBoxContainer");
         _availablePackagesItemList = GetNode<VBoxContainer>("%AvailablePackagesVBoxContainer");
-        _packageDetailsVBoxContainer = GetNode<VBoxContainer>("%PackageDetailsVBoxContainer");
-        _packageDetailsVBoxContainer.Visible = false;
+        _nugetPackageDetails = GetNode<NugetPackageDetails>("%NugetPackageDetails");
+        _nugetPackageDetails.Visible = false;
 
         _ = Task.GodotRun(async () =>
         {
@@ -54,6 +54,6 @@ public partial class NugetPanel : Control
     private void OnPackageSelected(IdePackageResult packageResult)
     {
         _selectedPackage = packageResult;
-        _packageDetailsVBoxContainer.Visible = true;
+        _nugetPackageDetails.Visible = true;
     }
 }
