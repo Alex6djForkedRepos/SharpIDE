@@ -6,6 +6,7 @@ namespace SharpIDE.Godot.Features.Nuget;
 
 public partial class PackageEntry : MarginContainer
 {
+    private Button _button;
     private Label _packageNameLabel = null!;
     private Label _currentVersionLabel = null!;
     private Label _latestVersionLabel = null!;
@@ -26,18 +27,22 @@ public partial class PackageEntry : MarginContainer
         Source_4_Color,
         Source_5_Color
     ];
+
+    public event Action<IdePackageResult> PackageSelected = null!;
     
     [Inject] private readonly NugetPackageIconCacheService _nugetPackageIconCacheService = null!;
     
     public IdePackageResult PackageResult { get; set; } = null!;
     public override void _Ready()
     {
+        _button = GetNode<Button>("Button");
         _packageNameLabel = GetNode<Label>("%PackageNameLabel");
         _currentVersionLabel = GetNode<Label>("%CurrentVersionLabel");
         _latestVersionLabel = GetNode<Label>("%LatestVersionLabel");
         _sourceNamesContainer = GetNode<HBoxContainer>("%SourceNamesHBoxContainer");
         _packageIconTextureRect = GetNode<TextureRect>("%PackageIconTextureRect");
         ApplyValues();
+        _button.Pressed += () => PackageSelected?.Invoke(PackageResult);
     }
     
     private void ApplyValues()

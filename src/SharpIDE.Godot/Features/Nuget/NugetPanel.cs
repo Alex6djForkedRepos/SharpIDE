@@ -10,17 +10,23 @@ public partial class NugetPanel : Control
     private VBoxContainer _implicitlyInstalledPackagesItemList = null!;
     private VBoxContainer _availablePackagesItemList = null!;
     
+    private VBoxContainer _packageDetailsVBoxContainer = null!;
+    
     public SharpIdeSolutionModel? Solution { get; set; }
     
     [Inject] private readonly NugetClientService _nugetClientService = null!;
     
     private readonly PackedScene _packageEntryScene = ResourceLoader.Load<PackedScene>("uid://cqc2xlt81ju8s");
+    
+    private IdePackageResult? _selectedPackage;
 
     public override void _Ready()
     {
         _installedPackagesVboxContainer = GetNode<VBoxContainer>("%InstalledPackagesVBoxContainer");
         _implicitlyInstalledPackagesItemList = GetNode<VBoxContainer>("%ImplicitlyInstalledPackagesVBoxContainer");
         _availablePackagesItemList = GetNode<VBoxContainer>("%AvailablePackagesVBoxContainer");
+        _packageDetailsVBoxContainer = GetNode<VBoxContainer>("%PackageDetailsVBoxContainer");
+        _packageDetailsVBoxContainer.Visible = false;
 
         _ = Task.GodotRun(async () =>
         {
@@ -32,6 +38,7 @@ public partial class NugetPanel : Control
             {
                 var scene = _packageEntryScene.Instantiate<PackageEntry>();
                 scene.PackageResult = s;
+                scene.PackageSelected += OnPackageSelected;
                 return scene;
             }).ToList();
             await this.InvokeAsync(() =>
@@ -42,5 +49,11 @@ public partial class NugetPanel : Control
                 }
             });
         });
+    }
+
+    private void OnPackageSelected(IdePackageResult packageResult)
+    {
+        _selectedPackage = packageResult;
+        _packageDetailsVBoxContainer.Visible = true;
     }
 }
