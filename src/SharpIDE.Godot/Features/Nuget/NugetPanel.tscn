@@ -94,6 +94,7 @@ layout_mode = 2
 [node name="ImplicitlyInstalledPackagesVBoxContainer" type="VBoxContainer" parent="VBoxContainer/MarginContainer2/HSplitContainer/VBoxContainer/ScrollContainer/VBoxContainer/PanelContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/separation = 0
 
 [node name="PackageEntry" parent="VBoxContainer/MarginContainer2/HSplitContainer/VBoxContainer/ScrollContainer/VBoxContainer/PanelContainer2/ImplicitlyInstalledPackagesVBoxContainer" instance=ExtResource("2_arg4f")]
 layout_mode = 2
@@ -109,6 +110,7 @@ layout_mode = 2
 [node name="AvailablePackagesVBoxContainer" type="VBoxContainer" parent="VBoxContainer/MarginContainer2/HSplitContainer/VBoxContainer/ScrollContainer/VBoxContainer/PanelContainer3"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/separation = 0
 
 [node name="PackageEntry" parent="VBoxContainer/MarginContainer2/HSplitContainer/VBoxContainer/ScrollContainer/VBoxContainer/PanelContainer3/AvailablePackagesVBoxContainer" instance=ExtResource("2_arg4f")]
 layout_mode = 2
