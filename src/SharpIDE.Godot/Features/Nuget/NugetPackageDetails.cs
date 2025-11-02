@@ -1,5 +1,6 @@
 using Godot;
 using SharpIDE.Application.Features.Nuget;
+using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
 
 namespace SharpIDE.Godot.Features.Nuget;
 
@@ -50,6 +51,11 @@ public partial class NugetPackageDetails : VBoxContainer
             _nugetSourceOptionButton.Selected = 0;
             OnNugetSourceSelected(0);
         });
+    }
+
+    public async Task SetProjects(HashSet<SharpIdeProjectModel> projects)
+    {
+        
     }
     
     private async void OnNugetSourceSelected(long sourceIndex)

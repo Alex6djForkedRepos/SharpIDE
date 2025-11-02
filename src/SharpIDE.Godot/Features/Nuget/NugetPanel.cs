@@ -73,6 +73,7 @@ public partial class NugetPanel : Control
         {
             if (_solution is null) throw new InvalidOperationException("Solution is null but should not be");
             _ = Task.GodotRun(() => SetSolutionOrProjectNameLabels(slnOrProject));
+            _ = Task.GodotRun(() => SetDetailsProjects(slnOrProject));
             _ = Task.GodotRun(PopulateSearchResults);
             _ = Task.GodotRun(PopulateInstalledPackages);
         });
@@ -82,6 +83,17 @@ public partial class NugetPanel : Control
     {
         _selectedPackage = packageResult;
         await _nugetPackageDetails.SetPackage(packageResult);
+    }
+
+    private async Task SetDetailsProjects(ISolutionOrProject slnOrProject)
+    {
+        var projects = slnOrProject switch
+        {
+            SharpIdeSolutionModel solutionModel => solutionModel.AllProjects,
+            SharpIdeProjectModel projectModel => [projectModel],
+            _ => throw new InvalidOperationException("Unknown solution or project type")
+        };
+        await _nugetPackageDetails.SetProjects(projects);
     }
 
     private async Task SetSolutionOrProjectNameLabels(ISolutionOrProject slnOrProject)
