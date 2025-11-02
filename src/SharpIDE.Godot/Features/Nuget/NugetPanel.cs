@@ -59,8 +59,8 @@ public partial class NugetPanel : Control
         _ = Task.GodotRun(async () =>
         {
             if (_solution is null) throw new InvalidOperationException("Solution is null but should not be");
-            
-            var result = await _nugetClientService.GetTop100Results(_solution!.DirectoryPath);
+
+            _ = Task.GodotRun(PopulateSearchResults);
             
             _ = Task.GodotRun(async () =>
             {
@@ -84,20 +84,6 @@ public partial class NugetPanel : Control
                     }
                 });
             });
-            var scenes = result.Select(s =>
-            {
-                var scene = _packageEntryScene.Instantiate<PackageEntry>();
-                scene.PackageResult = s;
-                scene.PackageSelected += OnPackageSelected;
-                return scene;
-            }).ToList();
-            await this.InvokeAsync(() =>
-            {
-                foreach (var scene in scenes)
-                {
-                    _availablePackagesItemList.AddChild(scene);
-                }
-            });
         });
     }
 
@@ -105,5 +91,24 @@ public partial class NugetPanel : Control
     {
         _selectedPackage = packageResult;
         await _nugetPackageDetails.SetPackage(packageResult);
+    }
+
+    private async Task PopulateSearchResults()
+    {
+        var result = await _nugetClientService.GetTop100Results(_solution!.DirectoryPath);
+        var scenes = result.Select(s =>
+        {
+            var scene = _packageEntryScene.Instantiate<PackageEntry>();
+            scene.PackageResult = s;
+            scene.PackageSelected += OnPackageSelected;
+            return scene;
+        }).ToList();
+        await this.InvokeAsync(() =>
+        {
+            foreach (var scene in scenes)
+            {
+                _availablePackagesItemList.AddChild(scene);
+            }
+        });
     }
 }
