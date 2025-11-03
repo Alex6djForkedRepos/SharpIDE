@@ -10,11 +10,13 @@ public partial class NugetPackageDetails : VBoxContainer
 	private Label _packageNameLabel = null!;
 	private OptionButton _versionOptionButton = null!;
 	private OptionButton _nugetSourceOptionButton = null!;
+	private VBoxContainer _projectsVBoxContainer = null!;
 
 	private IdePackageResult? _package;
 	
 	private readonly Texture2D _defaultIconTextureRect = ResourceLoader.Load<Texture2D>("uid://b5ih61vdjv5e6");
 	private readonly Texture2D _warningIconTextureRect = ResourceLoader.Load<Texture2D>("uid://pd3h5qfjn8pb");
+	private readonly PackedScene _packageDetailsProjectEntryScene = ResourceLoader.Load<PackedScene>("uid://5uan5u23cr2s");
 	
 	[Inject] private readonly NugetPackageIconCacheService _nugetPackageIconCacheService = null!;
 	[Inject] private readonly NugetClientService _nugetClientService = null!;
@@ -24,7 +26,10 @@ public partial class NugetPackageDetails : VBoxContainer
 		_packageNameLabel = GetNode<Label>("%PackageNameLabel");
 		_versionOptionButton = GetNode<OptionButton>("%VersionOptionButton");
 		_nugetSourceOptionButton = GetNode<OptionButton>("%NugetSourceOptionButton");
+		_projectsVBoxContainer = GetNode<VBoxContainer>("%ProjectsVBoxContainer");
 		_nugetSourceOptionButton.ItemSelected += OnNugetSourceSelected;
+		
+		_projectsVBoxContainer.QueueFreeChildren();
 	}
 
 	public async Task SetPackage(IdePackageResult package)
@@ -55,7 +60,18 @@ public partial class NugetPackageDetails : VBoxContainer
 
 	public async Task SetProjects(HashSet<SharpIdeProjectModel> projects)
 	{
-		
+		var scenes = projects.Select(s =>
+		{
+			var scene = _packageDetailsProjectEntryScene.Instantiate<PackageDetailsProjectEntry>();
+			return scene;
+		}).ToList();
+		await this.InvokeAsync(() =>
+		{
+			foreach (var scene in scenes)
+			{
+				_projectsVBoxContainer.AddChild(scene);
+			}
+		});
 	}
 	
 	private async void OnNugetSourceSelected(long sourceIndex)
