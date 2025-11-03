@@ -1,0 +1,69 @@
+[gd_scene load_steps=3 format=3 uid="uid://5uan5u23cr2s"]
+
+[ext_resource type="Texture2D" uid="uid://cqt30ma6xgder" path="res://Features/SolutionExplorer/Resources/Csproj.svg" id="1_dmxym"]
+[ext_resource type="Script" uid="uid://bhgqjh7sfenxm" path="res://Features/Nuget/PackageDetailsProjectEntry.cs" id="1_kwjfp"]
+
+[node name="PackageDetailsProjectEntry" type="MarginContainer"]
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -11.5
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+mouse_behavior_recursive = 1
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
+script = ExtResource("1_kwjfp")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 1
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 3
+theme_override_constants/margin_bottom = 4
+
+[node name="CsprojTextureRect" type="TextureRect" parent="HBoxContainer/MarginContainer"]
+layout_mode = 2
+texture = ExtResource("1_dmxym")
+expand_mode = 3
+
+[node name="ProjectNameLabel" type="Label" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.83137256, 0.83137256, 0.83137256, 1)
+theme_override_font_sizes/font_size = 16
+text = "Application"
+
+[node name="InstalledVersionLabel" type="Label" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 6
+theme_override_colors/font_color = Color(0.6706895, 0.6706895, 0.6706895, 1)
+text = "1.12.0"
+
+[node name="Spacer" type="Control" parent="HBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="UpgradeButton" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = "Upgrade"
+
+[node name="DowngradeButton" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = "Downgrade"
+
+[node name="RemoveButton" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = "Remove"
+
+[node name="AddButton" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = "Add"
