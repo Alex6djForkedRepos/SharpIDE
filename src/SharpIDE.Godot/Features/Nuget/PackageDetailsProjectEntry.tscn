@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://5uan5u23cr2s"]
+[gd_scene load_steps=4 format=3 uid="uid://5uan5u23cr2s"]
 
 [ext_resource type="Texture2D" uid="uid://cqt30ma6xgder" path="res://Features/SolutionExplorer/Resources/Csproj.svg" id="1_dmxym"]
 [ext_resource type="Script" uid="uid://bhgqjh7sfenxm" path="res://Features/Nuget/PackageDetailsProjectEntry.cs" id="1_kwjfp"]
+[ext_resource type="Texture2D" uid="uid://bvokbt0ofw201" path="res://Features/Nuget/Resources/remove-icon.svg" id="3_pnq3l"]
 
 [node name="PackageDetailsProjectEntry" type="MarginContainer"]
 anchors_preset = 14
@@ -64,9 +65,10 @@ text = "Downgrade"
 [node name="RemoveButton" type="Button" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Remove"
+theme_override_constants/icon_max_width = 23
+icon = ExtResource("3_pnq3l")
 
 [node name="AddButton" type="Button" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Add"
+text = " + "
