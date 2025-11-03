@@ -52,9 +52,10 @@ public partial class PackageEntry : MarginContainer
 		if (PackageResult is null) return;
 		_packageNameLabel.Text = PackageResult.PackageId;
 		var installedPackagedInfo = PackageResult.InstalledNugetPackageInfo;
-		if (installedPackagedInfo?.DependentPackages is not null && installedPackagedInfo.IsTransitive)
+		var isTransitive = installedPackagedInfo?.ProjectPackageReferences.Any(p => p.IsTransitive) ?? false;
+		if (isTransitive && installedPackagedInfo?.ProjectPackageReferences.Any(p => p.DependentPackages?.Count is not 0) is true)
 		{
-			var transitiveOriginsGroupedByVersion = installedPackagedInfo.DependentPackages
+			var transitiveOriginsGroupedByVersion = installedPackagedInfo.ProjectPackageReferences.SelectMany(s => s.DependentPackages ?? [])
 				.GroupBy(t => t.RequestedVersion)
 				.Select(g => new
 				{
@@ -67,10 +68,10 @@ public partial class PackageEntry : MarginContainer
 								  {string.Join("\n", transitiveOriginsGroupedByVersion.Select(t => $"{t.RequestedVersion.ToString("p", VersionRangeFormatter.Instance)} by {string.Join(", ", t.PackageNames)}"))}
 								  """;
 		}
-		_installedVersionLabel.Text = installedPackagedInfo?.IsTransitive is true ? $"({installedPackagedInfo?.Version.ToNormalizedString()})" : installedPackagedInfo?.Version.ToNormalizedString();
+		_installedVersionLabel.Text = GetInstalledVersionsText(installedPackagedInfo);
 		var highestVersionPackageFromSource = PackageResult.PackageFromSources
 			.MaxBy(p => p.PackageSearchMetadata.Identity.Version);
-		if (installedPackagedInfo?.Version != highestVersionPackageFromSource.PackageSearchMetadata.Identity.Version)
+		if (installedPackagedInfo?.ProjectPackageReferences.TrueForAll(s => s.InstalledVersion != highestVersionPackageFromSource.PackageSearchMetadata.Identity.Version) is true)
 		{
 			_latestVersionLabel.Text = highestVersionPackageFromSource.PackageSearchMetadata.Identity.Version.ToNormalizedString();
 		}
@@ -93,5 +94,18 @@ public partial class PackageEntry : MarginContainer
 			label.AddThemeColorOverride(ThemeStringNames.FontColor, labelColour);
 			_sourceNamesContainer.AddChild(label);
 		}
+	}
+	
+	private string GetInstalledVersionsText(InstalledNugetPackageInfo? packageInfo)
+	{
+		if (packageInfo is null) return string.Empty;
+		
+		var versions = packageInfo.ProjectPackageReferences
+			.Select(p => p.InstalledVersion.ToNormalizedString())
+			.Distinct()
+			.ToList();
+		var isTransitive = packageInfo.ProjectPackageReferences.Any(p => p.IsTransitive);
+		var text = isTransitive ? $"({string.Join(", ", versions)})" : string.Join(", ", versions);
+		return text;
 	}
 }

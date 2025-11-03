@@ -57,86 +57,102 @@ public static class ProjectEvaluation
 		return Guid.Parse(userSecretsId);
 	}
 
-	public static async Task<List<InstalledPackage>> GetPackageReferencesForProject(SharpIdeProjectModel projectModel, bool includeTransitive = true)
+	public static async Task<List<InstalledPackage>> GetPackageReferencesForProjects(List<SharpIdeProjectModel> projectModels, bool includeTransitive = true)
 	{
-		using var _ = SharpIdeOtel.Source.StartActivity($"{nameof(ProjectEvaluation)}.{nameof(GetPackageReferencesForProject)}");
-		Guard.Against.Null(projectModel, nameof(projectModel));
+		using var _ = SharpIdeOtel.Source.StartActivity($"{nameof(ProjectEvaluation)}.{nameof(GetPackageReferencesForProjects)}");
+		Guard.Against.Null(projectModels, nameof(projectModels));
 
-		var project = _projectCollection.GetLoadedProjects(projectModel.FilePath).Single();
-
-		var assetsPath = project.GetPropertyValue("ProjectAssetsFile");
-
-		if (File.Exists(assetsPath) is false)
+		var projects = projectModels.Select(s =>
 		{
-			throw new FileNotFoundException("Could not find project.assets.json file", assetsPath);
-		}
-		var lockFileFormat = new LockFileFormat();
-		var lockFile = lockFileFormat.Read(assetsPath);
-		var packages = GetPackagesFromAssetsFile(lockFile, includeTransitive);
-		return packages;
+			var proj = _projectCollection.GetLoadedProjects(s.FilePath).Single();
+			var assetsPath = proj.GetPropertyValue("ProjectAssetsFile");
+
+			if (File.Exists(assetsPath) is false)
+			{
+				throw new FileNotFoundException("Could not find project.assets.json file", assetsPath);
+			}
+			var lockFileFormat = new LockFileFormat();
+			var lockFile = lockFileFormat.Read(assetsPath);
+			return (LockFile: lockFile, Project: s);
+		}).ToList();
+
+		var result = await GetPackagesFromAssetsFiles(projects);
+		return result;
 	}
 
-	// ChatGPT Special
-	private static List<InstalledPackage> GetPackagesFromAssetsFile(LockFile assetsFile, bool includeTransitive)
+	public static async Task<List<InstalledPackage>> GetPackagesFromAssetsFiles(List<(LockFile, SharpIdeProjectModel)> projects, bool includeTransitive = true)
 	{
-		var packages = new List<InstalledPackage>();
-		var dependencyMap = NugetDependencyGraph.GetPackageDependencyMap(assetsFile);
-
-		// We currently do not handle multi-targeted projects
-		var target = assetsFile.Targets.SingleOrDefault(t => t.RuntimeIdentifier == null);
-		if (target == null) return packages;
-
-		var tfm = target.TargetFramework.GetShortFolderName();
-		var tfmInfo = assetsFile.PackageSpec.TargetFrameworks
-			.FirstOrDefault(t => t.FrameworkName.Equals(target.TargetFramework));
-
-		if (tfmInfo == null) return packages;
-
-		var topLevelDependencies = tfmInfo.Dependencies
-			.DistinctBy(s => s.Name)
-			.Select(s => s.Name)
-			.ToHashSet();
-
-		foreach (var lockFileTargetLibrary in target.Libraries.Where(l => l.Type == "package"))
+		using var _ = SharpIdeOtel.Source.StartActivity($"{nameof(ProjectEvaluation)}.{nameof(GetPackagesFromAssetsFiles)}");
+		var allPackages = new Dictionary<string, InstalledPackage>(StringComparer.OrdinalIgnoreCase);
+		foreach (var (assetsFile, project) in projects)
 		{
-			var isTopLevel = topLevelDependencies.Contains(lockFileTargetLibrary.Name);
-			if (!includeTransitive && !isTopLevel) continue;
+			var dependencyMap = NugetDependencyGraph.GetPackageDependencyMap(assetsFile);
 
-			var dependency = tfmInfo.Dependencies
-				.FirstOrDefault(d => d.Name.Equals(lockFileTargetLibrary.Name, StringComparison.OrdinalIgnoreCase));
+			// We currently do not handle multi-targeted projects
+			var target = assetsFile.Targets.SingleOrDefault(t => t.RuntimeIdentifier == null);
+			if (target == null) continue;
 
-			var dependents = dependencyMap.GetValueOrDefault(lockFileTargetLibrary.Name, []);
-			var mappedDependents = dependents.Select(d => new DependentPackage
+			var tfm = target.TargetFramework.GetShortFolderName();
+			var tfmInfo = assetsFile.PackageSpec.TargetFrameworks
+				.FirstOrDefault(t => t.FrameworkName.Equals(target.TargetFramework));
+
+			if (tfmInfo == null) continue;
+
+			var topLevelDependencies = tfmInfo.Dependencies
+				.DistinctBy(s => s.Name)
+				.Select(s => s.Name)
+				.ToHashSet();
+
+			foreach (var lockFileTargetLibrary in target.Libraries.Where(l => l.Type == "package"))
 			{
-				PackageName = d.PackageName,
-				RequestedVersion = d.PackageDependency.VersionRange
-			}).ToList();
+				if (string.IsNullOrEmpty(lockFileTargetLibrary.Name)) continue;
 
-			packages.Add(new InstalledPackage
-			{
-				Name = lockFileTargetLibrary.Name,
-				RequestedVersion = dependency?.LibraryRange.VersionRange?.ToString() ?? "",
-				ResolvedVersion = lockFileTargetLibrary.Version?.ToString(),
-				TargetFramework = tfm,
-				IsTopLevel = isTopLevel,
-				IsAutoReferenced = dependency?.AutoReferenced ?? false,
-				DependentPackages = mappedDependents
-			});
+				var isTopLevel = topLevelDependencies.Contains(lockFileTargetLibrary.Name);
+				if (!includeTransitive && !isTopLevel) continue;
+
+				var dependency = tfmInfo.Dependencies
+					.FirstOrDefault(d => d.Name.Equals(lockFileTargetLibrary.Name, StringComparison.OrdinalIgnoreCase));
+
+				var dependents = dependencyMap.GetValueOrDefault(lockFileTargetLibrary.Name, []);
+				var mappedDependents = dependents.Select(d => new DependentPackage
+				{
+					PackageName = d.PackageName,
+					RequestedVersion = d.PackageDependency.VersionRange
+				}).ToList();
+
+				var existingPackage = allPackages.GetValueOrDefault(lockFileTargetLibrary.Name) ?? new InstalledPackage { Name = lockFileTargetLibrary.Name, ProjectPackageReferences = [] };
+				existingPackage.ProjectPackageReferences.Add(new ProjectPackageReference
+				{
+					Project = project,
+					InstalledVersion = lockFileTargetLibrary.Version,
+					IsTopLevel = isTopLevel,
+					IsAutoReferenced = dependency?.AutoReferenced ?? false,
+					DependentPackages = mappedDependents
+				});
+				allPackages[lockFileTargetLibrary.Name] = existingPackage;
+			}
 		}
-
-		return packages;
+		return allPackages.Values.ToList();
 	}
+}
 
 public class InstalledPackage
 {
 	public required string Name { get; set; }
-	public required string RequestedVersion { get; set; }
-	public required string? ResolvedVersion { get; set; }
-	public required string TargetFramework { get; set; }
+	//public required NuGetVersion LatestVersion { get; set; }
+	public required List<ProjectPackageReference> ProjectPackageReferences { get; set; }
+}
+
+public class ProjectPackageReference
+{
+	public required SharpIdeProjectModel Project { get; set; }
+	public required NuGetVersion InstalledVersion { get; set; }
 	public required bool IsTopLevel { get; set; }
 	public required bool IsAutoReferenced { get; set; }
 	public List<DependentPackage>? DependentPackages { get; set; }
+	public bool IsTransitive => !IsTopLevel && !IsAutoReferenced;
 }
+
 public class DependentPackage
 {
 	public required string PackageName { get; set; }

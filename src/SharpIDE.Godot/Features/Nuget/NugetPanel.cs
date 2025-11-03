@@ -26,8 +26,7 @@ public partial class NugetPanel : Control
 	
 	private readonly PackedScene _packageEntryScene = ResourceLoader.Load<PackedScene>("uid://cqc2xlt81ju8s");
 	private readonly Texture2D _csprojIcon = ResourceLoader.Load<Texture2D>("uid://cqt30ma6xgder");
-	
-	private IdePackageResult? _selectedPackage;
+
 	// we use this to access the project for the dropdown
 	private List<SharpIdeProjectModel?> _projects = null!;
 
@@ -81,7 +80,6 @@ public partial class NugetPanel : Control
 
 	private async Task OnPackageSelected(IdePackageResult packageResult)
 	{
-		_selectedPackage = packageResult;
 		await _nugetPackageDetails.SetPackage(packageResult);
 	}
 
@@ -113,6 +111,7 @@ public partial class NugetPanel : Control
 
 	private async Task PopulateSearchResults()
 	{
+		return;
 		var result = await _nugetClientService.GetTop100Results(_solution!.DirectoryPath);
 		var scenes = result.Select(s =>
 		{
@@ -135,7 +134,7 @@ public partial class NugetPanel : Control
 	{
 		var project = _solution!.AllProjects.First(s => s.Name == "ProjectA");
 		await project.MsBuildEvaluationProjectTask;
-		var installedPackages = await ProjectEvaluation.GetPackageReferencesForProject(project);
+		var installedPackages = await ProjectEvaluation.GetPackageReferencesForProjects([project]);
 		var idePackageResult = await _nugetClientService.GetPackagesForInstalledPackages(project.ChildNodeBasePath, installedPackages);
 		var scenes = idePackageResult.Select(s =>
 		{
@@ -144,7 +143,7 @@ public partial class NugetPanel : Control
 			scene.PackageSelected += OnPackageSelected;
 			return scene;
 		}).ToList();
-		var transitiveScenes = scenes.Where(s => s.PackageResult.InstalledNugetPackageInfo!.IsTransitive).ToList();
+		var transitiveScenes = scenes.Where(s => s.PackageResult.InstalledNugetPackageInfo!.ProjectPackageReferences.Any(x => x.IsTransitive)).ToList();
 		var directScenes = scenes.Except(transitiveScenes).ToList();
 		await this.InvokeAsync(() =>
 		{
