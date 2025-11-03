@@ -1,7 +1,9 @@
 using Godot;
+using NuGet.Versioning;
 using SharpIDE.Application.Features.Evaluation;
 using SharpIDE.Application.Features.Nuget;
 using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
+using SharpIDE.Godot.Features.Problems;
 
 namespace SharpIDE.Godot.Features.Nuget;
 
@@ -29,8 +31,19 @@ public partial class NugetPackageDetails : VBoxContainer
 		_nugetSourceOptionButton = GetNode<OptionButton>("%NugetSourceOptionButton");
 		_projectsVBoxContainer = GetNode<VBoxContainer>("%ProjectsVBoxContainer");
 		_nugetSourceOptionButton.ItemSelected += OnNugetSourceSelected;
+		_versionOptionButton.ItemSelected += VersionSelected;
 		
 		_projectsVBoxContainer.QueueFreeChildren();
+	}
+
+	private void VersionSelected(long index)
+	{
+		var selectedVersion = _versionOptionButton.GetItemMetadata((int)index).As<RefCountedContainer<NuGetVersion>>();
+		foreach (var child in _projectsVBoxContainer.GetChildren().OfType<PackageDetailsProjectEntry>())
+		{
+			child.VersionSelectedInDetails = selectedVersion?.Item;
+			child.DisplayRelevantButtons();
+		}
 	}
 
 	public async Task SetPackage(IdePackageResult package)
@@ -106,10 +119,12 @@ public partial class NugetPackageDetails : VBoxContainer
 			_versionOptionButton.Clear();
 			foreach (var (index, metadata) in results.Index())
 			{
-				_versionOptionButton.AddItem(metadata.Identity.Version.ToNormalizedString());
+				_versionOptionButton.AddItem(metadata.Identity.Version.ToNormalizedString(), index);
+				_versionOptionButton.SetItemMetadata(index, new RefCountedContainer<NuGetVersion>(metadata.Identity.Version));
 				//_versionOptionButton.SetItemIcon(index, _warningIconTextureRect);
 			}
 			_versionOptionButton.Selected = 0;
+			VersionSelected(0);
 		});
 	}
 }
