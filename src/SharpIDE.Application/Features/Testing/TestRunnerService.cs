@@ -28,7 +28,7 @@ public class TestRunnerService
 
 		return allDiscoveredTestNodes;
 	}
-	
+
 	// Assumes it has already been built
 	public async Task RunTestsAsync(SharpIdeProjectModel project)
 	{
