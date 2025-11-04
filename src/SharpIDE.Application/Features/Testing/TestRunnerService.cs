@@ -9,6 +9,7 @@ public class TestRunnerService
 {
 	public async Task<List<TestNode>> DiscoverTests(SharpIdeSolutionModel solutionModel)
 	{
+		await Task.WhenAll(solutionModel.AllProjects.Select(s => s.MsBuildEvaluationProjectTask));
 		var testProjects = solutionModel.AllProjects.Where(p => p.IsMtpTestProject).ToList();
 		List<TestNode> allDiscoveredTestNodes = [];
 		foreach (var testProject in testProjects)
