@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://d4d0umsglu2ex"]
+[gd_scene load_steps=4 format=3 uid="uid://d4d0umsglu2ex"]
 
 [ext_resource type="Script" uid="uid://b6gq81odfn8ok" path="res://Features/Debug_/Tab/DebugPanelTab.cs" id="1_ppo25"]
 [ext_resource type="PackedScene" uid="uid://bdu08nd7si641" path="res://Features/Debug_/Tab/SubTabs/ThreadsVariablesSubTab.tscn" id="2_e6ax5"]
+[ext_resource type="Theme" uid="uid://bswaamju2blyt" path="res://Features/TerminalBase/TerminalTheme.tres" id="3_e6ax5"]
 
 [node name="DebugPanelTab" type="Control"]
 layout_mode = 3
@@ -43,3 +44,4 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("3_e6ax5")
