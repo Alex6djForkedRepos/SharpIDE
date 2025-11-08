@@ -5,7 +5,7 @@ using OpenTelemetry.Trace;
 
 namespace Microsoft.Extensions.Hosting;
 
-public static class GodotServiceDefaults
+public static class GodotOtelExtensions
 {
 	private static TracerProvider _tracerProvider = null!;
 	private static MeterProvider _meterProvider = null!;

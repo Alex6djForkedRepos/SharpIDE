@@ -27,7 +27,7 @@ public partial class IdeWindow : Control
         ResourceLoader.LoadThreadedRequest(SlnPickerScenePath);
         ResourceLoader.LoadThreadedRequest(IdeRootScenePath);
         MSBuildLocator.RegisterDefaults();
-        GodotServiceDefaults.AddServiceDefaults();
+        GodotOtelExtensions.AddServiceDefaults();
         Singletons.AppState = AppStateLoader.LoadAppStateFromConfigFile();
         //GetWindow().SetMinSize(new Vector2I(1152, 648));
         Callable.From(() => PickSolution(true)).CallDeferred();
