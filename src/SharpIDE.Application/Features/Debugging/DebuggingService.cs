@@ -82,10 +82,25 @@ public class DebuggingService
 			await Task.CompletedTask.ConfigureAwait(ConfigureAwaitOptions.ForceYielding); // The VS Code Debug Protocol throws if you try to send a request from the dispatcher thread
 			var additionalProperties = @event.AdditionalProperties;
 			// source, line, column
-			var filePath = additionalProperties?["source"]?["path"]!.Value<string>()!;
-			var line = (additionalProperties?["line"]?.Value<int>()!).Value;
-			var executionStopInfo = new ExecutionStopInfo { FilePath = filePath, Line = line, ThreadId = @event.ThreadId!.Value };
-			GlobalEvents.Instance.DebuggerExecutionStopped.InvokeParallelFireAndForget(executionStopInfo);
+			if (additionalProperties.Count is not 0)
+			{
+				var filePath = additionalProperties?["source"]?["path"]!.Value<string>()!;
+				var line = (additionalProperties?["line"]?.Value<int>()!).Value;
+				var executionStopInfo = new ExecutionStopInfo { FilePath = filePath, Line = line, ThreadId = @event.ThreadId!.Value };
+				GlobalEvents.Instance.DebuggerExecutionStopped.InvokeParallelFireAndForget(executionStopInfo);
+			}
+			else
+			{
+				// we need to get the top stack frame to find out where we are
+				var stackTraceRequest = new StackTraceRequest { ThreadId = @event.ThreadId!.Value, StartFrame = 0, Levels = 1 };
+				var stackTraceResponse = debugProtocolHost.SendRequestSync(stackTraceRequest);
+				var topFrame = stackTraceResponse.StackFrames.Single();
+				var filePath = topFrame.Source.Path;
+				var line = topFrame.Line;
+				var executionStopInfo = new ExecutionStopInfo { FilePath = filePath, Line = line, ThreadId = @event.ThreadId!.Value };
+				GlobalEvents.Instance.DebuggerExecutionStopped.InvokeParallelFireAndForget(executionStopInfo);
+			}
+
 			if (@event.Reason is StoppedEvent.ReasonValue.Exception)
 			{
 				Console.WriteLine("Stopped due to exception, continuing");
