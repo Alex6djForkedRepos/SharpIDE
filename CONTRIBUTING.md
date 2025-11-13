@@ -6,8 +6,8 @@
 3. Extract it, and put it somewhere, e.g. Documents/Godot/4.5.1
 4. Run `Godot_v4.5.1-stable_mono_win64.exe` (or equivalent executable)
 5. Import SharpIDE
-<img width="172" height="90" alt="image" src="https://github.com/user-attachments/assets/6750d4fa-4ba9-427d-8481-99278baaa354" />
-<img width="467" height="193" alt="image" src="https://github.com/user-attachments/assets/1fa21550-fae0-4caf-8b93-34faba244d84" />
+<img width="345" height="180" alt="image" src="https://github.com/user-attachments/assets/6750d4fa-4ba9-427d-8481-99278baaa354" />
+<img width="362" height="191" alt="image" src="https://github.com/user-attachments/assets/8a48d099-9d64-4e5b-9fbd-65e696b7f28d" />
 <img width="252" height="115" alt="image" src="https://github.com/user-attachments/assets/b500dcae-1fa7-433b-bcf3-fba9bb23cc45" />
 <hr>
 
