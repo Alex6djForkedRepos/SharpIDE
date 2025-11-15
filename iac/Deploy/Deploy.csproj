@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="NuGet.Versioning" />
+    <PackageReference Include="Octokit" />
     <PackageReference Include="ParallelPipelines" />
   </ItemGroup>
 

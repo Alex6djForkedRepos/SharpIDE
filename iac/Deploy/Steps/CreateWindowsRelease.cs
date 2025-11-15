@@ -23,6 +23,8 @@ public class CreateWindowsRelease : IStep
 			cancellationToken
 		);
 
+		var windowsZipFile = await windowsPublishDirectory.ZipDirectoryToFile($"{PipelineFileHelper.GitRootDirectory.FullName}/artifacts/publish-godot/sharpide-win-x64.zip");
+
 		return [godotExportResult];
 	}
 }
