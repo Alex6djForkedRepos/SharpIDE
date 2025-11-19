@@ -34,6 +34,14 @@ public class IdeOpenTabsFileManager(ILogger<IdeOpenTabsFileManager> logger)
 		_openFiles[file] = newLazyTask;
 	}
 
+	public async Task UpdateFileTextInMemoryIfOpen(SharpIdeFile file, string newText)
+	{
+		if (!_openFiles.ContainsKey(file)) return;
+
+		var newLazyTask = new Lazy<Task<string>>(() => Task.FromResult(newText));
+		_openFiles[file] = newLazyTask;
+	}
+
 	public async Task SaveFileAsync(SharpIdeFile file)
 	{
 		if (!_openFiles.ContainsKey(file)) throw new InvalidOperationException("File is not open in memory.");

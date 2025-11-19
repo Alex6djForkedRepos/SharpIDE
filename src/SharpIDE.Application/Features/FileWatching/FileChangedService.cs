@@ -68,7 +68,7 @@ public class FileChangedService(RoslynAnalysis roslynAnalysis, IdeOpenTabsFileMa
 			// Disk is already up to date
 			// Update any open tabs
 			// update in memory
-			await _openTabsFileManager.UpdateFileTextInMemory(file, newContents);
+			await _openTabsFileManager.UpdateFileTextInMemoryIfOpen(file, newContents);
 			file.FileContentsChangedExternally.InvokeParallelFireAndForget(linePosition);
 		}
 		else if (changeType is FileChangeType.CodeActionChange)
