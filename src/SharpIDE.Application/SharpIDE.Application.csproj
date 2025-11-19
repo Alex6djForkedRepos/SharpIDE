@@ -28,6 +28,10 @@
     <PackageReference Include="CliWrap" />
     <PackageReference Include="FileWatcherEx" />
     <PackageReference Include="LibGit2Sharp" />
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Diagnostics.NETCore.Client" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" />
     <PackageReference Include="Microsoft.Extensions.Http" />
@@ -60,5 +64,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SharpIDE.RazorAccess\SharpIDE.RazorAccess.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
   </ItemGroup>
 </Project>
