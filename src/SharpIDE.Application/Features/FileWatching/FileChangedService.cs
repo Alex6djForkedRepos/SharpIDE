@@ -120,12 +120,10 @@ public class FileChangedService
 		await _roslynAnalysis.UpdateSolutionDiagnostics(cancellationToken);
 	}
 
-	private CancellationSeries _updateSolutionDiagnosticsCtSeries = new();
 	private async Task HandleCsprojChanged(SharpIdeFile file)
 	{
 		var project = SolutionModel.AllProjects.SingleOrDefault(p => p.FilePath == file.Path);
 		if (project is null) return;
-		var newCts = _updateSolutionDiagnosticsCtSeries.CreateNext();
 		await ProjectEvaluation.ReloadProject(file.Path);
 		await _roslynAnalysis.ReloadProject(project, CancellationToken.None);
 		GlobalEvents.Instance.SolutionAltered.InvokeParallelFireAndForget();
@@ -134,7 +132,6 @@ public class FileChangedService
 
 	private async Task HandleWorkspaceFileChanged(SharpIdeFile file, string newContents)
 	{
-		var newCts = _updateSolutionDiagnosticsCtSeries.CreateNext();
 		await _roslynAnalysis.UpdateDocument(file, newContents);
 		GlobalEvents.Instance.SolutionAltered.InvokeParallelFireAndForget();
 		_updateSolutionDiagnosticsQueue.AddWork();
@@ -142,7 +139,6 @@ public class FileChangedService
 
 	private async Task HandleWorkspaceFileAdded(SharpIdeFile file, string contents)
 	{
-		var newCts = _updateSolutionDiagnosticsCtSeries.CreateNext();
 		await _roslynAnalysis.AddDocument(file, contents);
 		GlobalEvents.Instance.SolutionAltered.InvokeParallelFireAndForget();
 		_updateSolutionDiagnosticsQueue.AddWork();
@@ -150,7 +146,6 @@ public class FileChangedService
 
 	private async Task HandleWorkspaceFileRemoved(SharpIdeFile file)
 	{
-		var newCts = _updateSolutionDiagnosticsCtSeries.CreateNext();
 		await _roslynAnalysis.RemoveDocument(file);
 		GlobalEvents.Instance.SolutionAltered.InvokeParallelFireAndForget();
 		_updateSolutionDiagnosticsQueue.AddWork();
@@ -158,7 +153,6 @@ public class FileChangedService
 
 	private async Task HandleWorkspaceFileMoved(SharpIdeFile file, string oldFilePath)
 	{
-		var newCts = _updateSolutionDiagnosticsCtSeries.CreateNext();
 		await _roslynAnalysis.MoveDocument(file, oldFilePath);
 		GlobalEvents.Instance.SolutionAltered.InvokeParallelFireAndForget();
 		_updateSolutionDiagnosticsQueue.AddWork();
@@ -166,7 +160,6 @@ public class FileChangedService
 
 	private async Task HandleWorkspaceFileRenamed(SharpIdeFile file, string oldFilePath)
 	{
-		var newCts = _updateSolutionDiagnosticsCtSeries.CreateNext();
 		await _roslynAnalysis.RenameDocument(file, oldFilePath);
 		GlobalEvents.Instance.SolutionAltered.InvokeParallelFireAndForget();
 		_updateSolutionDiagnosticsQueue.AddWork();
