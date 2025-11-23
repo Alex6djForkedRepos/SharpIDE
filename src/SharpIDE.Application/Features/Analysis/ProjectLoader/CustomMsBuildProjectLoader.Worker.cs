@@ -111,7 +111,7 @@ public partial class CustomMsBuildProjectLoader
             return result;
         }
 
-        public async Task<ImmutableArray<ProjectInfo>> LoadAsync(CancellationToken cancellationToken)
+        public async Task<(ImmutableArray<ProjectInfo>, Dictionary<ProjectId, ProjectFileInfo>)> LoadAsync(CancellationToken cancellationToken)
         {
             var results = ImmutableArray.CreateBuilder<ProjectInfo>();
             var processedPaths = new HashSet<string>(PathUtilities.Comparer);
@@ -150,7 +150,7 @@ public partial class CustomMsBuildProjectLoader
                 }
             }
 
-            return results.ToImmutableAndClear();
+            return (results.ToImmutableAndClear(), _projectIdToFileInfoMap);
         }
 
         private async Task<ImmutableArray<ProjectFileInfo>> LoadProjectFileInfosAsync(string projectPath, DiagnosticReportingOptions reportingOptions, CancellationToken cancellationToken)

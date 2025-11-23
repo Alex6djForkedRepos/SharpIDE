@@ -22,6 +22,7 @@ using Microsoft.CodeAnalysis.Remote.Razor.SemanticTokens;
 using Microsoft.CodeAnalysis.Rename;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.Logging;
 using NuGet.Frameworks;
 using Roslyn.LanguageServer.Protocol;
@@ -52,6 +53,9 @@ public class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService buildSe
 	private static IDocumentMappingService? _documentMappingService;
 	private static HashSet<CodeFixProvider> _codeFixProviders = [];
 	private static HashSet<CodeRefactoringProvider> _codeRefactoringProviders = [];
+
+	// Primarily used for getting the globs for a project
+	private Dictionary<ProjectId, ProjectFileInfo> _projectFileInfoMap = new();
 
 	private TaskCompletionSource _solutionLoadedTcs = null!;
 	private SharpIdeSolutionModel? _sharpIdeSolutionModel;
@@ -110,7 +114,8 @@ public class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService buildSe
 
 			// MsBuildProjectLoader doesn't do a restore which is absolutely required for resolving PackageReferences, if they have changed. I am guessing it just reads from project.assets.json
 			await _buildService.MsBuildAsync(_sharpIdeSolutionModel.FilePath, BuildType.Restore, cancellationToken);
-			var solutionInfo = await _msBuildProjectLoader!.LoadSolutionInfoAsync(_sharpIdeSolutionModel.FilePath, cancellationToken: cancellationToken);
+			var (solutionInfo, projectFileInfos) = await _msBuildProjectLoader!.LoadSolutionInfoAsync(_sharpIdeSolutionModel.FilePath, cancellationToken: cancellationToken);
+			_projectFileInfoMap = projectFileInfos;
 			_workspace.ClearSolution();
 			var solution = _workspace.AddSolution(solutionInfo);
 		}
@@ -185,7 +190,8 @@ public class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService buildSe
 		var __ = SharpIdeOtel.Source.StartActivity($"{nameof(RoslynAnalysis)}.MSBuildProjectLoader.LoadSolutionInfoAsync");
 		// This call is the expensive part - MSBuild is slow. There doesn't seem to be any incrementalism for solutions.
 		// The best we could do to speed it up is do .LoadProjectInfoAsync for the single project, and somehow munge that into the existing solution
-		var newSolutionInfo = await _msBuildProjectLoader.LoadSolutionInfoAsync(_sharpIdeSolutionModel!.FilePath, cancellationToken: cancellationToken);
+		var (newSolutionInfo, projectFileInfos) = await _msBuildProjectLoader.LoadSolutionInfoAsync(_sharpIdeSolutionModel!.FilePath, cancellationToken: cancellationToken);
+		_projectFileInfoMap = projectFileInfos;
 		__?.Dispose();
 
 		var ___ = SharpIdeOtel.Source.StartActivity($"{nameof(RoslynAnalysis)}.Workspace.OnSolutionReloaded");
@@ -219,7 +225,11 @@ public class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService buildSe
 		// This will get all projects necessary to build this group of projects, regardless of whether those projects are actually affected by the original project change
 		// We can potentially optimise this, but given this is the expensive part, lets just proceed with reloading them all in the solution
 		// We potentially lose performance because Workspace/Solution caches are dropped, but lets not prematurely optimise
-		var loadedProjectInfos = await _msBuildProjectLoader.LoadProjectInfosAsync(projectPathsToReload, null, cancellationToken: cancellationToken);
+		var (loadedProjectInfos, projectFileInfos) = await _msBuildProjectLoader.LoadProjectInfosAsync(projectPathsToReload, null, cancellationToken: cancellationToken);
+		foreach (var (projectId, projectFileInfo) in projectFileInfos)
+		{
+			_projectFileInfoMap[projectId] = projectFileInfo;
+		}
 		__?.Dispose();
 
 		var ___ = SharpIdeOtel.Source.StartActivity($"{nameof(RoslynAnalysis)}.Workspace.UpdateSolution");
@@ -960,12 +970,46 @@ public class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService buildSe
 		Guard.Against.Null(fileModel, nameof(fileModel));
 		Guard.Against.Null(content, nameof(content));
 
-		var project = GetProjectForSharpIdeFile(fileModel);
+		var sharpIdeProject = GetSharpIdeProjectForSharpIdeFile(fileModel);
+		var probableProject = GetProjectForSharpIdeProjectModel(sharpIdeProject);
+		// This file probably belongs to this project, but we need to check its path against the globs for the project to make sure
+		var projectFileInfo = _projectFileInfoMap.GetValueOrDefault(probableProject.Id);
+		Guard.Against.Null(projectFileInfo);
+		var matchers = projectFileInfo.FileGlobs.Select(glob =>
+		{
+			var matcher = new Matcher();
+			matcher.AddIncludePatterns(glob.Includes);
+			matcher.AddExcludePatterns(glob.Excludes);
+			matcher.AddExcludePatterns(glob.Removes);
+			return matcher;
+		});
+
+		var belongsToProject = false;
+		// Check if the file path matches any of the globs in the project file.
+		foreach (var matcher in matchers)
+		{
+			// CPS re-creates the msbuild globs from the includes/excludes/removes and the project XML directory and
+			// ignores the MSBuildGlob.FixedDirectoryPart.  We'll do the same here and match using the project directory as the relative path.
+			// See https://devdiv.visualstudio.com/DevDiv/_git/CPS?path=/src/Microsoft.VisualStudio.ProjectSystem/Build/MsBuildGlobFactory.cs
+			var relativeDirectory = sharpIdeProject.DirectoryPath;
+
+			var matches = matcher.Match(relativeDirectory, fileModel.Path);
+			if (matches.HasMatches)
+			{
+				belongsToProject = true;
+				break;
+			}
+		}
+
+		if (belongsToProject is false)
+		{
+			return;
+		}
 
 		var existingDocument = fileModel switch
 		{
-			{ IsRazorFile: true } => project.AdditionalDocuments.SingleOrDefault(s => s.FilePath == fileModel.Path),
-			{ IsCsharpFile: true } => project.Documents.SingleOrDefault(s => s.FilePath == fileModel.Path),
+			{ IsRazorFile: true } => probableProject.AdditionalDocuments.SingleOrDefault(s => s.FilePath == fileModel.Path),
+			{ IsCsharpFile: true } => probableProject.Documents.SingleOrDefault(s => s.FilePath == fileModel.Path),
 			_ => throw new InvalidOperationException("AddDocument failed: File is not a workspace file")
 		};
 		if (existingDocument is not null)
@@ -977,8 +1021,8 @@ public class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService buildSe
 
 		var newSolution = fileModel switch
 		{
-			{ IsRazorFile: true } => _workspace.CurrentSolution.AddAdditionalDocument(DocumentId.CreateNewId(project.Id), fileModel.Name, sourceText, filePath: fileModel.Path),
-			{ IsCsharpFile: true } => _workspace.CurrentSolution.AddDocument(DocumentId.CreateNewId(project.Id), fileModel.Name, sourceText, filePath: fileModel.Path),
+			{ IsRazorFile: true } => _workspace.CurrentSolution.AddAdditionalDocument(DocumentId.CreateNewId(probableProject.Id), fileModel.Name, sourceText, filePath: fileModel.Path),
+			{ IsCsharpFile: true } => _workspace.CurrentSolution.AddDocument(DocumentId.CreateNewId(probableProject.Id), fileModel.Name, sourceText, filePath: fileModel.Path),
 			_ => throw new InvalidOperationException("AddDocument failed: File is not in workspace")
 		};
 
@@ -1037,9 +1081,15 @@ public class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService buildSe
 		return outputPath;
 	}
 
-	private static Project GetProjectForSharpIdeFile(SharpIdeFile sharpIdeFile)
+	private static SharpIdeProjectModel GetSharpIdeProjectForSharpIdeFile(SharpIdeFile sharpIdeFile)
 	{
 		var sharpIdeProjectModel = ((IChildSharpIdeNode)sharpIdeFile).GetNearestProjectNode()!;
+		return sharpIdeProjectModel;
+	}
+
+	private static Project GetProjectForSharpIdeFile(SharpIdeFile sharpIdeFile)
+	{
+		var sharpIdeProjectModel = GetSharpIdeProjectForSharpIdeFile(sharpIdeFile);
 		var project = GetProjectForSharpIdeProjectModel(sharpIdeProjectModel);
 		return project;
 	}

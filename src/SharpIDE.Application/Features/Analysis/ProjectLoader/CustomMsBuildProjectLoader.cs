@@ -13,7 +13,7 @@ namespace SharpIDE.Application.Features.Analysis.ProjectLoader;
 // https://github.com/dotnet/roslyn/blob/main/src/Workspaces/MSBuild/Core/MSBuild/MSBuildProjectLoader.cs
 public partial class CustomMsBuildProjectLoader(Workspace workspace, ImmutableDictionary<string, string>? properties = null) : MSBuildProjectLoader(workspace, properties)
 {
-	public async Task<ImmutableArray<ProjectInfo>> LoadProjectInfosAsync(
+	public async Task<(ImmutableArray<ProjectInfo>, Dictionary<ProjectId, ProjectFileInfo>)> LoadProjectInfosAsync(
 		List<string> projectFilePaths,
 		ProjectMap? projectMap = null,
 		IProgress<ProjectLoadProgress>? progress = null,
@@ -64,7 +64,7 @@ public partial class CustomMsBuildProjectLoader(Workspace workspace, ImmutableDi
     /// <param name="progress">An optional <see cref="IProgress{T}"/> that will receive updates as the solution is loaded.</param>
     /// <param name="msbuildLogger">An optional <see cref="ILogger"/> that will log MSBuild results.</param>
     /// <param name="cancellationToken">An optional <see cref="CancellationToken"/> to allow cancellation of this operation.</param>
-    public new async Task<SolutionInfo> LoadSolutionInfoAsync(
+    public new async Task<(SolutionInfo, Dictionary<ProjectId, ProjectFileInfo>)> LoadSolutionInfoAsync(
         string solutionFilePath,
         IProgress<ProjectLoadProgress>? progress = null,
         ILogger? msbuildLogger = null,
@@ -109,13 +109,15 @@ public partial class CustomMsBuildProjectLoader(Workspace workspace, ImmutableDi
             discoveredProjectOptions: reportingOptions,
             preferMetadataForReferencesOfDiscoveredProjects: false);
 
-        var projectInfos = await worker.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var (projectInfos, projectFileInfos) = await worker.LoadAsync(cancellationToken).ConfigureAwait(false);
 
         // construct workspace from loaded project infos
-        return SolutionInfo.Create(
+        var solutionInfo = SolutionInfo.Create(
             SolutionId.CreateNewId(debugName: absoluteSolutionPath),
             version: default,
             absoluteSolutionPath,
             projectInfos);
+
+        return (solutionInfo, projectFileInfos);
     }
 }
