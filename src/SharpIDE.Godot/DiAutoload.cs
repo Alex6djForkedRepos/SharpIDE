@@ -13,6 +13,7 @@ using SharpIDE.Application.Features.Nuget;
 using SharpIDE.Application.Features.Run;
 using SharpIDE.Application.Features.Search;
 using SharpIDE.Application.Features.Testing;
+using SharpIDE.Godot.Features.ActivityListener;
 
 namespace SharpIDE.Godot;
 
@@ -48,6 +49,7 @@ public partial class DiAutoload : Node
         services.AddScoped<IdeFileOperationsService>();
         services.AddScoped<SharpIdeSolutionModificationService>();
         services.AddScoped<SharpIdeSolutionAccessor>();
+        services.AddScoped<ActivityMonitor>();
 
         services.AddHttpClient();
         services.AddLogging(builder =>
