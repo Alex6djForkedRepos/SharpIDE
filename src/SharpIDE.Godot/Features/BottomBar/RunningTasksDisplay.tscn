@@ -24,7 +24,7 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 corner_detail = 6
 
-[node name="HBoxContainer" type="HBoxContainer"]
+[node name="RunningTasksDisplay" type="HBoxContainer"]
 anchors_preset = 14
 anchor_top = 0.5
 anchor_right = 1.0
