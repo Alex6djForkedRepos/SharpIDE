@@ -106,9 +106,13 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		var newCt = _solutionAlteredCancellationTokenSeries.CreateNext();
 		var documentSyntaxHighlighting = _roslynAnalysis.GetDocumentSyntaxHighlighting(_currentFile, newCt);
 		var razorSyntaxHighlighting = _roslynAnalysis.GetRazorDocumentSyntaxHighlighting(_currentFile, newCt);
-		await Task.WhenAll(documentSyntaxHighlighting, razorSyntaxHighlighting);
+		await Task.WhenAll(documentSyntaxHighlighting, razorSyntaxHighlighting).WaitAsync(newCt).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+		if (newCt.IsCancellationRequested) return;
+		var documentDiagnosticsTask = _roslynAnalysis.GetDocumentDiagnostics(_currentFile, newCt);
 		await this.InvokeAsync(async () => SetSyntaxHighlightingModel(await documentSyntaxHighlighting, await razorSyntaxHighlighting));
-		var documentDiagnostics = await _roslynAnalysis.GetDocumentDiagnostics(_currentFile, newCt);
+		await ((Task)documentDiagnosticsTask).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+		if (newCt.IsCancellationRequested) return;
+		var documentDiagnostics = await documentDiagnosticsTask;
 		await this.InvokeAsync(() => SetDiagnostics(documentDiagnostics));
 	}
 
