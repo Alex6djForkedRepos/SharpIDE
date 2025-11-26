@@ -10,7 +10,7 @@ namespace SharpIDE.Application.Features.Analysis.ProjectLoader;
 // My attempts to provide a custom IAnalyzerService to the MEF composition were in vain.
 // I think this will only be temporary, as I think a more sophisticated ProjectLoader mechanism is going to be necessary.
 // see roslyn LanguageServerProjectLoader, LanguageServerProjectSystem, ProjectSystemProjectFactory
-// https://github.com/dotnet/roslyn/blob/main/src/Workspaces/MSBuild/Core/MSBuild/MSBuildProjectLoader.cs
+// https://github.com/dotnet/roslyn/blob/52d073ff6f1c668e858bed838712467afcf83876/src/Workspaces/MSBuild/Core/MSBuild/MSBuildProjectLoader.cs
 public partial class CustomMsBuildProjectLoader(Workspace workspace, ImmutableDictionary<string, string>? properties = null) : MSBuildProjectLoader(workspace, properties)
 {
 	public async Task<(ImmutableArray<ProjectInfo>, Dictionary<ProjectId, ProjectFileInfo>)> LoadProjectInfosAsync(
