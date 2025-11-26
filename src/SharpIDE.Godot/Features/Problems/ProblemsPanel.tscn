@@ -6,6 +6,10 @@
 [ext_resource type="Texture2D" uid="uid://cqt30ma6xgder" path="res://Features/SolutionExplorer/Resources/Csproj.svg" id="4_wqdox"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_wqdox"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
 
 [node name="ProblemsPanel" type="Control"]
 layout_mode = 3
@@ -42,15 +46,14 @@ text = "Problems"
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Tree" type="Tree" parent="VBoxContainer/ScrollContainer"]
+[node name="Tree" type="Tree" parent="VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_override_constants/inner_item_margin_left = 5
+theme_override_constants/inner_item_margin_right = 5
 theme_override_constants/draw_guides = 0
 theme_override_styles/panel = SubResource("StyleBoxEmpty_wqdox")
 hide_root = true
+scroll_horizontal_enabled = false

@@ -28,6 +28,7 @@ public partial class ProblemsPanel : Control
 
     public override void _Ready()
     {
+        _diagnosticCustomDrawCallable = new Callable(this, MethodName.DiagnosticCustomDraw);
         _tree = GetNode<Tree>("%Tree");
         _tree.ItemActivated += TreeOnItemActivated;
         _rootItem = _tree.CreateItem();
@@ -78,19 +79,101 @@ public partial class ProblemsPanel : Control
         });
     }
 
+    private Callable? _diagnosticCustomDrawCallable;
+    private TextLine _diagnosticTextLine = new TextLine(); // Reusing this is based on the assumption that it is called by godot in a single-threaded fashion
+    private void DiagnosticCustomDraw(TreeItem treeItem, Rect2 rect)
+    {
+        var hovered = _tree.GetItemAtPosition(_tree.GetLocalMousePosition()) == treeItem;
+        var isSelected = treeItem.IsSelected(0);
+        
+        var diagnosticContainer = treeItem.GetMetadata(0).As<RefCountedContainer<SharpIdeDiagnostic>?>();
+        if (diagnosticContainer is null) return;
+        
+        var diagnostic = diagnosticContainer.Item;
+        var message = diagnostic.Diagnostic.GetMessage();
+        var severity = diagnostic.Diagnostic.Severity;
+        var linePosition = diagnostic.Span.Start;
+        
+        // Get icon based on severity
+        var icon = severity switch
+        {
+            DiagnosticSeverity.Error => ErrorIcon,
+            DiagnosticSeverity.Warning => WarningIcon,
+            _ => null
+        };
+        
+        // Define padding and spacing
+        const float padding = 4.0f;
+        const float iconSize = 22.0f;
+        const float spacing = 6.0f;
+        
+        var currentX = rect.Position.X + padding;
+        var currentY = rect.Position.Y;
+        
+        // Draw icon
+        if (icon is not null)
+        {
+            var iconRect = new Rect2(currentX, currentY + (rect.Size.Y - iconSize) / 2, iconSize, iconSize);
+            _tree.DrawTextureRect(icon, iconRect, false);
+            currentX += iconSize + spacing;
+        }
+        
+        // Get font and prepare text
+        var font = _tree.GetThemeFont("font");
+        var fontSize = _tree.GetThemeFontSize("font_size");
+        var textColor = (isSelected, hovered) switch
+        {
+            (true, true) => _tree.GetThemeColor("font_hovered_selected_color"),
+            (true, false) => _tree.GetThemeColor("font_selected_color"),
+            (false, true) => _tree.GetThemeColor("font_hovered_color"),
+            (false, false) => _tree.GetThemeColor("font_color")
+        };
+        var textYPos = currentY + (rect.Size.Y + fontSize) / 2 - 2;
+        
+        // Calculate right-hand text widths first
+        var fileName = Path.GetFileName(diagnostic.FilePath);
+        var fileNameWidth = font.GetStringSize(fileName, HorizontalAlignment.Left, -1, fontSize).X;
+        var locationText = $"({linePosition.Line + 1}:{linePosition.Character + 1})";
+        var locationWidth = font.GetStringSize(locationText, HorizontalAlignment.Left, -1, fontSize).X;
+        var rightSideWidth = locationWidth + spacing + fileNameWidth + padding;
+
+        var textLine = _diagnosticTextLine;
+        textLine.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+        textLine.SetHorizontalAlignment(HorizontalAlignment.Left);
+        textLine.AddString(message, font, fontSize);
+        
+        // Draw message with width constraint to avoid overlap
+        var maxMessageWidth = rect.Size.X - currentX - rightSideWidth - spacing;
+        if (maxMessageWidth > 0)
+        {
+            textLine.Width = maxMessageWidth;
+            textLine.Draw(_tree.GetCanvasItem(), new Vector2(currentX, textYPos - textLine.GetLineAscent()), textColor);
+            textLine.Clear();
+            //_tree.DrawString(font, new Vector2(currentX, textYPos), message, HorizontalAlignment.Left, maxMessageWidth, fontSize, textColor);
+        }
+        
+        // Draw location info (line:column) on the right side
+        var locationX = rect.Position.X + rect.Size.X - rightSideWidth;
+        var locationColor = textColor with { A = 0.5f };
+        _tree.DrawString(font, new Vector2(locationX, textYPos), locationText, HorizontalAlignment.Left, -1, fontSize, locationColor);
+        
+        // Draw file name on the right side, after the location
+        var fileNameX = locationX + locationWidth + spacing;
+        var fileNameColor = textColor with { A = 0.7f };
+        _tree.DrawString(font, new Vector2(fileNameX, textYPos), fileName, HorizontalAlignment.Left, -1, fontSize, fileNameColor);
+    }
+
     private async Task CreateDiagnosticTreeItem(Tree tree, TreeItem parent, ViewChangedEvent<SharpIdeDiagnostic, TreeItemContainer> e)
     {
         await this.InvokeAsync(() =>
         {
             var diagItem = tree.CreateItem(parent);
-            diagItem.SetText(0, e.NewItem.Value.Diagnostic.GetMessage());
+            diagItem.SetCellMode(0, TreeItem.TreeCellMode.Custom);
+            diagItem.SetCustomAsButton(0, true);
+            diagItem.SetTooltipText(0, e.NewItem.Value.Diagnostic.GetMessage());
             diagItem.SetMetadata(0, new RefCountedContainer<SharpIdeDiagnostic>(e.NewItem.Value));
-            diagItem.SetIcon(0, e.NewItem.Value.Diagnostic.Severity switch
-            {
-                DiagnosticSeverity.Error => ErrorIcon,
-                DiagnosticSeverity.Warning => WarningIcon,
-                _ => null
-            });
+            // Avoid allocation via Callable.From((TreeItem s, Rect2 x) => CustomDraw(s, x))
+            diagItem.SetCustomDrawCallback(0, _diagnosticCustomDrawCallable!.Value);
             e.NewItem.View.Value = diagItem;
         });
     }
