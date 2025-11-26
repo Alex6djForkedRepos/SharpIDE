@@ -35,13 +35,16 @@ public class RoslynAnalysisTests
 	    var solutionModel = await VsPersistenceMapper.GetSolutionModel(@"C:\Users\Matthew\Documents\Git\SharpIDE\SharpIDE.sln", TestContext.Current.CancellationToken);
 	    var sharpIdeApplicationProject = solutionModel.AllProjects.Single(p => p.Name == "SharpIDE.Application");
 
+	    var timer = Stopwatch.StartNew();
 		roslynAnalysis._solutionLoadedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 	    await roslynAnalysis.LoadSolutionInWorkspace(solutionModel, TestContext.Current.CancellationToken);
+	    timer.Stop();
+	    _testOutputHelper.WriteLine($"Solution load: {timer.ElapsedMilliseconds} ms");
 
 	    // Act
 	    foreach (var i in Enumerable.Range(0, 3))
 	    {
-		    var timer = Stopwatch.StartNew();
+		    timer.Restart();
 		    await roslynAnalysis.GetProjectDiagnostics(sharpIdeApplicationProject, TestContext.Current.CancellationToken);
 		    timer.Stop();
 		    _testOutputHelper.WriteLine($"Diagnostics: {timer.ElapsedMilliseconds.ToString()}ms");

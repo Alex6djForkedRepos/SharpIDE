@@ -415,8 +415,15 @@ public partial class CustomMsBuildProjectLoader
                     }
                 }
             }
+			var analyzerReferences = commandLineArgs.ResolveAnalyzerReferences(analyzerLoader).Distinct(Microsoft.CodeAnalysis.MSBuild.MSBuildProjectLoader.Worker.AnalyzerReferencePathComparer.Instance);
 
-            return commandLineArgs.ResolveAnalyzerReferences(analyzerLoader).Distinct(Microsoft.CodeAnalysis.MSBuild.MSBuildProjectLoader.Worker.AnalyzerReferencePathComparer.Instance);
+			var isolatedReferences = IsolatedAnalyzerReferenceSet.CreateIsolatedAnalyzerReferencesAsync(
+				useAsync: false,
+				analyzerReferences.ToImmutableArray(),
+				_solutionServices,
+				CancellationToken.None).VerifyCompleted();
+
+			return isolatedReferences;
         }
 
         private ImmutableArray<DocumentInfo> CreateDocumentInfos(IReadOnlyList<DocumentFileInfo> documentFileInfos, ProjectId projectId, Encoding? encoding)
