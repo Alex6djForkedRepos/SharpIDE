@@ -211,7 +211,11 @@ public partial class NugetPanel : Control
 		var isOccurring = !activity.IsStopped;
 		if (activity.DisplayName == $"{nameof(NugetPanel)}.{nameof(PopulateInstalledPackages)}")
 		{
-			await this.InvokeAsync(() => _installedPackagesProgressBar.Visible = isOccurring);
+			await this.InvokeAsync(() =>
+			{
+				_installedPackagesProgressBar.Visible = isOccurring;
+				_implicitlyInstalledPackagesProgressBar.Visible = isOccurring;
+			});
 		}
 	}
 }
