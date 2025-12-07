@@ -9,9 +9,8 @@ public static partial class SymbolInfoComponents
     {
         var label = new RichTextLabel();
         label.PushColor(CachedColors.White);
-        label.PushFont(MonospaceFont);
+        label.PushFontSize(14);
         label.AddText(diagnostic.Diagnostic.GetMessage());
-        label.Pop(); // font
         label.Pop();
         return label;
     }
