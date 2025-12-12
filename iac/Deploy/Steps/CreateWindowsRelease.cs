@@ -12,7 +12,7 @@ public class CreateWindowsRelease : IStep
 	{
 		var godotPublishDirectory = await PipelineFileHelper.GitRootDirectory.GetDirectory("./artifacts/publish-godot");
 		godotPublishDirectory.Create();
-		var windowsPublishDirectory = await godotPublishDirectory.GetDirectory("./win");
+		var windowsPublishDirectory = await godotPublishDirectory.GetDirectory("./win-x64");
 		windowsPublishDirectory.Create();
 
 		var godotProjectFile = await PipelineFileHelper.GitRootDirectory.GetFile("./src/SharpIDE.Godot/project.godot");
