@@ -49,7 +49,7 @@ public partial class ThreadsVariablesSubTab : Control
 				{
 					var firstChild = item.GetFirstChild();
 					Guard.Against.Null(firstChild);
-					item.RemoveChild(firstChild);
+					firstChild.Visible = false; // Set to visible false rather than RemoveChild, so we don't have to Free
 					foreach (var variable in variables)
 					{
 						AddVariableToTreeItem(item, variable);
