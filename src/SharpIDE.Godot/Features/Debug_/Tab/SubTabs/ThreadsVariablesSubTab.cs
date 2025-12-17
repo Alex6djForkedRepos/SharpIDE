@@ -146,6 +146,7 @@ public partial class ThreadsVariablesSubTab : Control
 		{
 			// unlike sharpdbg and presumably vsdbg, netcoredbg does not set PresentationHint for variables
 			if (variable.Name == "Static members") icon = _staticMembersIcon;
+			else icon = _fieldIcon;
 		}
 		variableItem.SetIcon(0, icon);
 		variableItem.SetMetadata(0, new Vector2I(0, variable.VariablesReference));
