@@ -13,6 +13,7 @@ using SharpIDE.Application;
 using SharpIDE.Application.Features.Analysis;
 using SharpIDE.Application.Features.Analysis.Razor;
 using SharpIDE.Application.Features.Debugging;
+using SharpIDE.Application.Features.Editor;
 using SharpIDE.Application.Features.Events;
 using SharpIDE.Application.Features.FilePersistence;
 using SharpIDE.Application.Features.FileWatching;
@@ -32,6 +33,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 	public delegate void CodeFixesRequestedEventHandler();
 
 	private int _currentLine;
+	private int _currentCol;
 	private int _selectionStartCol;
 	private int _selectionEndCol;
 	
@@ -58,6 +60,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
     [Inject] private readonly FileChangedService _fileChangedService = null!;
     [Inject] private readonly IdeApplyCompletionService _ideApplyCompletionService = null!;
     [Inject] private readonly IdeNavigationHistoryService _navigationHistoryService = null!;
+    [Inject] private readonly EditorCaretPositionService _editorCaretPositionService = null!;
 
     private readonly List<string> _codeCompletionTriggers =
     [
@@ -85,6 +88,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		BreakpointToggled += OnBreakpointToggled;
 		CaretChanged += OnCaretChanged;
 		TextChanged += OnTextChanged;
+		FocusEntered += OnFocusEntered;
 		SymbolHovered += OnSymbolHovered;
 		SymbolValidate += OnSymbolValidate;
 		SymbolLookup += OnSymbolLookup;
@@ -175,6 +179,12 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		GlobalEvents.Instance.SolutionAltered.Unsubscribe(OnSolutionAltered);
 		if (_currentFile is not null) _openTabsFileManager.CloseFile(_currentFile);
 	}
+	
+	private void OnFocusEntered()
+	{
+		// The selected tab changed, report the caret position
+		_editorCaretPositionService.CaretPosition = GetCaretPosition();
+	}
 
 	private async void OnBreakpointToggled(long line)
 	{
@@ -207,6 +217,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		_selectionStartCol = GetSelectionFromColumn();
 		_selectionEndCol = GetSelectionToColumn();
 		_currentLine = GetCaretLine();
+		_currentCol = GetCaretColumn();
 		// GD.Print($"Selection changed to line {_currentLine}, start {_selectionStartCol}, end {_selectionEndCol}");
 	}
 

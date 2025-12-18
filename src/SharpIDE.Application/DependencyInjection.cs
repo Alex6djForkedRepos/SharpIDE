@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using SharpIDE.Application.Features.Analysis;
 using SharpIDE.Application.Features.Build;
+using SharpIDE.Application.Features.Editor;
 using SharpIDE.Application.Features.Evaluation;
 using SharpIDE.Application.Features.FilePersistence;
 using SharpIDE.Application.Features.FileWatching;
@@ -35,6 +36,7 @@ public static class DependencyInjection
 		services.AddScoped<IdeFileOperationsService>();
 		services.AddScoped<SharpIdeSolutionModificationService>();
 		services.AddScoped<AnalyzerFileWatcher>();
+		services.AddScoped<EditorCaretPositionService>();
 		services.AddLogging();
 		return services;
 	}
