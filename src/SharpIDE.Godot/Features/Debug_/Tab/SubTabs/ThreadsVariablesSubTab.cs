@@ -24,12 +24,16 @@ public partial class ThreadsVariablesSubTab : Control
 	// private ThreadModel? _selectedThread = null!; // null when not at a stop point
 	
     [Inject] private readonly RunService _runService = null!;
+    
+    private Callable? _debuggerVariableCustomDrawCallable;
+    private Dictionary<TreeItem, Variable> _variableReferenceLookup = []; // primarily used for DebuggerVariableCustomDraw
 
 	public override void _Ready()
 	{
 		_threadsTree = GetNode<Tree>("%ThreadsTree");
 		_stackFramesTree = GetNode<Tree>("%StackFramesTree");
 		_variablesTree = GetNode<Tree>("%VariablesTree");
+		_debuggerVariableCustomDrawCallable = new Callable(this, MethodName.DebuggerVariableCustomDraw);
 		GlobalEvents.Instance.DebuggerExecutionStopped.Subscribe(OnDebuggerExecutionStopped);
 		GlobalEvents.Instance.DebuggerExecutionContinued.Subscribe(ClearAllTrees);
 		_threadsTree.ItemSelected += OnThreadSelected;
@@ -37,6 +41,26 @@ public partial class ThreadsVariablesSubTab : Control
 		_variablesTree.ItemCollapsed += OnVariablesItemExpandedOrCollapsed;
 		Project.ProjectStoppedRunning.Subscribe(ClearAllTrees);
 	}
+	
+	//private readonly TextLine _textLine = new TextLine();
+	private void DebuggerVariableCustomDraw(TreeItem treeItem, Rect2 rect)
+    {
+	    // variableItem.SetText(0, $$"""{{variable.Name}} = {{{variable.Type}}} {{variable.Value}}""");
+	    var variable = _variableReferenceLookup.GetValueOrDefault(treeItem);
+	    if (variable is null) return;
+	    
+	    var font = _variablesTree.GetThemeFont(ThemeStringNames.Font);
+	    var fontSize = _variablesTree.GetThemeFontSize(ThemeStringNames.FontSize);
+	    var variablesTreeCanvasRid = _variablesTree.GetCanvasItem();
+	    
+	    _variablesTree.DrawString(font, new Vector2(rect.Position.X, rect.Position.Y), variable.Name, HorizontalAlignment.Left, -1, fontSize, Colors.White);
+        
+        //_textLine.AddString(variable.Name, font, fontSize);
+        //_textLine.Draw(variablesTreeCanvasRid, new Vector2(rect.Position.X, rect.Position.Y), Colors.White);
+        //_textLine.Clear();
+        //test.Draw(_variablesTree.GetCanvasItem(), new Vector2(rect.Position.X, rect.Position.Y), Colors.White);
+        //richTextLabel.Draw(_variablesTree.GetCanvasItem(), new Vector2(currentX, textYPos - textLine.GetLineAscent()), textColor);
+    }
 
 	private void OnVariablesItemExpandedOrCollapsed(TreeItem item)
 	{
@@ -134,7 +158,7 @@ public partial class ThreadsVariablesSubTab : Control
 	private void AddVariableToTreeItem(TreeItem parentItem, Variable variable)
 	{
 		var variableItem = _variablesTree.CreateItem(parentItem);
-		variableItem.SetText(0, $$"""{{variable.Name}} = {{{variable.Type}}} {{variable.Value}}""");
+		_variableReferenceLookup[variableItem] = variable;
 		var icon = variable.PresentationHint?.Kind switch
 		{
 			VariablePresentationHint.KindValue.Data => _fieldIcon,
@@ -150,6 +174,17 @@ public partial class ThreadsVariablesSubTab : Control
 		}
 		variableItem.SetIcon(0, icon);
 		variableItem.SetMetadata(0, new Vector2I(0, variable.VariablesReference));
+		if (variable.Name == "Static members")
+		{
+			variableItem.SetTooltipText(0, null);
+			variableItem.SetText(0, "Static members");
+		}
+		else
+		{
+			variableItem.SetCellMode(0, TreeItem.TreeCellMode.Custom);
+			variableItem.SetCustomAsButton(0, true);
+			variableItem.SetCustomDrawCallback(0, _debuggerVariableCustomDrawCallable!.Value);
+		}
 		if (variable.VariablesReference is not 0)
 		{
 			var placeHolderItem = _variablesTree.CreateItem(variableItem);
