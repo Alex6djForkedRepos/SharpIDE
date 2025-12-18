@@ -64,6 +64,7 @@ public partial class ThreadsVariablesSubTab
         var isObjectType = variable.Value == variableTypeDisplayString; // e.g. classes value will be the class name wrapped in {}
         if (isObjectType is false)
         {
+            variableTypeDisplayString = $$"""{{{GetObjectNameWithoutNamespace(variable.Type)}}}""";
             _variablesTree.DrawString(font, new Vector2(currentX, textYPos), variableTypeDisplayString, HorizontalAlignment.Left, -1, fontSize, VariableTypeColor);
             var variableTypeDrawnSize = font.GetStringSize(variableTypeDisplayString, HorizontalAlignment.Left, -1, fontSize).X;
             currentX += variableTypeDrawnSize + padding;
