@@ -142,24 +142,12 @@ public partial class ThreadsVariablesSubTab : Control
 	{
 		var variableItem = _variablesTree.CreateItem(parentItem);
 		_variableReferenceLookup[variableItem] = variable;
-		var icon = variable.PresentationHint?.Kind switch
-		{
-			VariablePresentationHint.KindValue.Data => _fieldIcon,
-			VariablePresentationHint.KindValue.Property => _propertyIcon,
-			VariablePresentationHint.KindValue.Class => _staticMembersIcon,
-			_ => null
-		};
-		if (icon is null)
-		{
-			// unlike sharpdbg and presumably vsdbg, netcoredbg does not set PresentationHint for variables
-			if (variable.Name == "Static members") icon = _staticMembersIcon;
-			else icon = _fieldIcon;
-		}
-		variableItem.SetIcon(0, icon);
+		
 		variableItem.SetMetadata(0, new Vector2I(0, variable.VariablesReference));
 		if (variable.Name == "Static members")
 		{
 			variableItem.SetTooltipText(0, null);
+			variableItem.SetIcon(0, _staticMembersIcon);
 			variableItem.SetText(0, "Static members");
 		}
 		else
