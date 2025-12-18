@@ -1,4 +1,7 @@
-﻿using Godot;
+﻿using System.Text;
+using Godot;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 
 namespace SharpIDE.Godot.Features.Debug_.Tab.SubTabs;
@@ -71,11 +74,70 @@ public partial class ThreadsVariablesSubTab
     
     private static string GetObjectNameWithoutNamespace(string fullTypeName)
     {
-        // System.Collections.Generic.List<MyApp.Class> =>  List<Class>
-        var span = fullTypeName.AsSpan();
-        var firstGenericBracketIndex = span.IndexOf('<');  // returns -1 if not found
-        var slice = firstGenericBracketIndex is -1 ? span : span[..firstGenericBracketIndex];
-        var lastDotIndex = slice.LastIndexOf('.');
-        return lastDotIndex is -1 ? fullTypeName : span[(lastDotIndex + 1)..].ToString();
+        var test = SyntaxFactory.ParseTypeName(fullTypeName);
+        var stringBuilder = new StringBuilder();
+        WriteType(test, stringBuilder);
+        var displayString = stringBuilder.ToString();
+        return displayString;
+    }
+    
+    // ChatGPT
+    private static void WriteType(TypeSyntax type, StringBuilder sb)
+    {
+        switch (type)
+        {
+            case IdentifierNameSyntax id:
+                sb.Append(id.Identifier.Text);
+                break;
+
+            case QualifiedNameSyntax q:
+                // Only keep the rightmost name
+                WriteType(q.Right, sb);
+                break;
+
+            case GenericNameSyntax g:
+                sb.Append(g.Identifier.Text);
+                sb.Append('<');
+
+                for (var i = 0; i < g.TypeArgumentList.Arguments.Count; i++)
+                {
+                    if (i > 0)
+                        sb.Append(", ");
+
+                    WriteType(g.TypeArgumentList.Arguments[i], sb);
+                }
+
+                sb.Append('>');
+                break;
+
+            case AliasQualifiedNameSyntax a:
+                WriteType(a.Name, sb);
+                break;
+
+            case PredefinedTypeSyntax p:
+                sb.Append(p.Keyword.Text); // int, string, etc.
+                break;
+
+            case NullableTypeSyntax n:
+                WriteType(n.ElementType, sb);
+                sb.Append('?');
+                break;
+
+            case ArrayTypeSyntax a:
+                WriteType(a.ElementType, sb);
+                sb.Append('[');
+                sb.Append(',', a.RankSpecifiers[0].Rank - 1);
+                sb.Append(']');
+                break;
+
+            case PointerTypeSyntax p:
+                WriteType(p.ElementType, sb);
+                sb.Append('*');
+                break;
+
+            default:
+                sb.Append(type.ToString()); // fallback
+                break;
+        }
     }
 }
