@@ -122,6 +122,7 @@ public partial class RunService(ILogger<RunService> logger, RoslynAnalysis rosly
 			project.Running = false;
 			if (isDebug)
 			{
+				_debugger = null;
 				GlobalEvents.Instance.ProjectStoppedDebugging.InvokeParallelFireAndForget(project);
 			}
 			else
