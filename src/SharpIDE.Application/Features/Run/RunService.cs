@@ -38,10 +38,23 @@ public partial class RunService(ILogger<RunService> logger, RoslynAnalysis rosly
 		var launchProfile = launchProfiles.FirstOrDefault();
 		try
 		{
+			var fileName = launchProfile?.CommandName switch
+			{
+				"Executable" => launchProfile.ExecutablePath,
+				"Project" or _ => "dotnet",
+			} ?? "dotnet";
+
+			var workingDirectory = launchProfile?.WorkingDirectory switch
+			{
+				"$(ProjectDir)" => project.DirectoryPath,
+				null => project.DirectoryPath,
+				{} nonNullString => nonNullString,
+			};
+
 			var processStartInfo = new ProcessStartInfo2
 			{
-				FileName = "dotnet",
-				WorkingDirectory = Path.GetDirectoryName(project.FilePath),
+				FileName = fileName,
+				WorkingDirectory = workingDirectory,
 				//Arguments = $"run --project \"{project.FilePath}\" --no-restore",
 				Arguments = await GetRunArguments(project),
 				RedirectStandardOutput = true,
