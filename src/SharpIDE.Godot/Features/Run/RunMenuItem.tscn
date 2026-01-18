@@ -58,17 +58,22 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="AnimatedTextureParentControl" type="Control" parent="."]
-custom_minimum_size = Vector2(40, 0)
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
+size_flags_vertical = 4
 
 [node name="BuildAnimationTextureRect" type="TextureRect" parent="AnimatedTextureParentControl"]
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_left = -3.0
+offset_top = 2.0
+offset_right = 22.0
+offset_bottom = 27.0
 rotation = 0.87266463
-pivot_offset = Vector2(19, 26)
+pivot_offset = Vector2(11.83, 19.69)
 texture = ExtResource("2_8lles")
-expand_mode = 2
+expand_mode = 5
 stretch_mode = 5
 
 [node name="RunButton" type="Button" parent="."]
