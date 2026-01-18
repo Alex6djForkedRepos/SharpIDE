@@ -55,13 +55,11 @@ public partial class RunMenuItem : HBoxContainer
 
     private async void OnRunButtonPressed()
     {
-		GodotGlobalEvents.Instance.BottomPanelTabExternallySelected.InvokeParallelFireAndForget(BottomPanelType.Run);
         await _runService.RunProject(Project).ConfigureAwait(false);
     }
     
     private async void OnDebugButtonPressed()
     {
-        GodotGlobalEvents.Instance.BottomPanelTabExternallySelected.InvokeParallelFireAndForget(BottomPanelType.Debug);
         var debuggerExecutableInfo = new DebuggerExecutableInfo
         {
             UseInMemorySharpDbg = Singletons.AppState.IdeSettings.DebuggerUseSharpDbg,
