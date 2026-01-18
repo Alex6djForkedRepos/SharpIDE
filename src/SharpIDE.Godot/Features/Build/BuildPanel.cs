@@ -27,7 +27,7 @@ public partial class BuildPanel : Control
         }
     }
 
-    private async Task OnBuildStarted()
+    private async Task OnBuildStarted(BuildStartedFlags _)
     {
         await this.InvokeAsync(() => _terminal.Clear());
         _buildOutputChannelReader ??= _buildService.BuildTextWriter.ConsoleChannel.Reader;

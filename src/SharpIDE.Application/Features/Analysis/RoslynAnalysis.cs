@@ -120,7 +120,7 @@ public partial class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService
 		using (var ___ = SharpIdeOtel.Source.StartActivity("RestoreSolution"))
 		{
 			// MsBuildProjectLoader doesn't do a restore which is absolutely required for resolving PackageReferences, if they have changed. I am guessing it just reads from project.assets.json
-			await _buildService.MsBuildAsync(_sharpIdeSolutionModel.FilePath, BuildType.Restore, cancellationToken);
+			await _buildService.MsBuildAsync(_sharpIdeSolutionModel.FilePath, BuildType.Restore, BuildStartedFlags.UserFacing, cancellationToken);
 		}
 		using (var ___ = SharpIdeOtel.Source.StartActivity("OpenSolution"))
 		{
@@ -187,7 +187,7 @@ public partial class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService
 		Guard.Against.Null(_msBuildProjectLoader, nameof(_msBuildProjectLoader));
 
 		// It is important to note that a Workspace has no concept of MSBuild, nuget packages etc. It is just told about project references and "metadata" references, which are dlls. This is the what MSBuild does - it reads the csproj, and most importantly resolves nuget package references to dlls
-		await _buildService.MsBuildAsync(_sharpIdeSolutionModel!.FilePath, BuildType.Restore, cancellationToken);
+		await _buildService.MsBuildAsync(_sharpIdeSolutionModel!.FilePath, BuildType.Restore, BuildStartedFlags.UserFacing, cancellationToken);
 		var __ = SharpIdeOtel.Source.StartActivity($"{nameof(RoslynAnalysis)}.MSBuildProjectLoader.LoadSolutionInfoAsync");
 		// This call is the expensive part - MSBuild is slow. There doesn't seem to be any incrementalism for solutions.
 		// The best we could do to speed it up is do .LoadProjectInfoAsync for the single project, and somehow munge that into the existing solution
@@ -214,7 +214,7 @@ public partial class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService
 		Guard.Against.Null(_workspace, nameof(_workspace));
 		Guard.Against.Null(_msBuildProjectLoader, nameof(_msBuildProjectLoader));
 
-		await _buildService.MsBuildAsync(_sharpIdeSolutionModel!.FilePath, BuildType.Restore, cancellationToken);
+		await _buildService.MsBuildAsync(_sharpIdeSolutionModel!.FilePath, BuildType.Restore, BuildStartedFlags.Internal, cancellationToken);
 		var __ = SharpIdeOtel.Source.StartActivity($"{nameof(RoslynAnalysis)}.{nameof(CustomMsBuildProjectLoader)}.{nameof(CustomMsBuildProjectLoader.LoadProjectInfosAsync)}");
 
 		var thisProject = GetProjectForSharpIdeProjectModel(projectModel);

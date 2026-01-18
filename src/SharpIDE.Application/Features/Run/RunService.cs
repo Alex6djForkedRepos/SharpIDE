@@ -5,6 +5,7 @@ using AsyncReadProcess;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 using SharpIDE.Application.Features.Analysis;
+using SharpIDE.Application.Features.Build;
 using SharpIDE.Application.Features.Debugging;
 using SharpIDE.Application.Features.Evaluation;
 using SharpIDE.Application.Features.Events;
@@ -14,13 +15,14 @@ using Breakpoint = SharpIDE.Application.Features.Debugging.Breakpoint;
 
 namespace SharpIDE.Application.Features.Run;
 
-public partial class RunService(ILogger<RunService> logger, RoslynAnalysis roslynAnalysis)
+public partial class RunService(ILogger<RunService> logger, RoslynAnalysis roslynAnalysis, BuildService buildService)
 {
 	private readonly ConcurrentDictionary<SharpIdeProjectModel, SemaphoreSlim> _projectLocks = [];
 	private Debugger? _debugger; // TODO: Support multiple debuggers for multiple running projects
 
 	private readonly ILogger<RunService> _logger = logger;
 	private readonly RoslynAnalysis _roslynAnalysis = roslynAnalysis;
+	private readonly BuildService _buildService = buildService;
 
 	public async Task RunProject(SharpIdeProjectModel project, bool isDebug = false, DebuggerExecutableInfo? debuggerExecutableInfo = null)
 	{
@@ -32,8 +34,10 @@ public partial class RunService(ILogger<RunService> logger, RoslynAnalysis rosly
 		var waitResult = await semaphoreSlim.WaitAsync(0).ConfigureAwait(false);
 		if (waitResult is false) throw new InvalidOperationException($"Project {project.Name} is already running.");
 		if (project.RunningCancellationTokenSource is not null) throw new InvalidOperationException($"Project {project.Name} is already running with a cancellation token source.");
-
 		project.RunningCancellationTokenSource = new CancellationTokenSource();
+
+		await _buildService.MsBuildAsync(project.FilePath);
+
 		var launchProfiles = await LaunchSettingsParser.GetLaunchSettingsProfiles(project);
 		var launchProfile = launchProfiles.FirstOrDefault();
 		try

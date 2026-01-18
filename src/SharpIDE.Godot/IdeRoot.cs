@@ -98,10 +98,11 @@ public partial class IdeRoot : Control
 		_nodeReadyTcs.SetResult();
 	}
 
-	private async Task OnBuildStarted() => await OnBuildRunningStateChanged(true);
+	private async Task OnBuildStarted(BuildStartedFlags flags) => await OnBuildRunningStateChanged(true, flags);
 	private async Task OnBuildFinished() => await OnBuildRunningStateChanged(false);
-	private async Task OnBuildRunningStateChanged(bool running)
+	private async Task OnBuildRunningStateChanged(bool running, BuildStartedFlags? flags = null)
 	{
+		if (running && flags is BuildStartedFlags.UserFacing) GodotGlobalEvents.Instance.BottomPanelTabExternallySelected.InvokeParallelFireAndForget(BottomPanelType.Build);
 		await this.InvokeAsync(() =>
 		{
 			_cancelMsBuildActionButton.Disabled = !running;

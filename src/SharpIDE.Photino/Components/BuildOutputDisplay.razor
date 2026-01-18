@@ -28,7 +28,7 @@
 		});
 	}
 
-	private async Task ClearPreviousOutput()
+	private async Task ClearPreviousOutput(BuildStartedFlags _)
 	{
 		await _terminalDisplayRef.Clear();
 		await InvokeAsync(StateHasChanged);

@@ -16,15 +16,16 @@ public enum BuildType
 	Clean,
 	Restore
 }
+public enum BuildStartedFlags { UserFacing = 0, Internal }
 public class BuildService(ILogger<BuildService> logger)
 {
 	private readonly ILogger<BuildService> _logger = logger;
 
-	public EventWrapper<Task> BuildStarted { get; } = new(() => Task.CompletedTask);
+	public EventWrapper<BuildStartedFlags, Task> BuildStarted { get; } = new(_ => Task.CompletedTask);
 	public EventWrapper<Task> BuildFinished { get; } = new(() => Task.CompletedTask);
 	public ChannelTextWriter BuildTextWriter { get; } = new ChannelTextWriter();
 	private CancellationTokenSource? _cancellationTokenSource;
-	public async Task MsBuildAsync(string solutionOrProjectFilePath, BuildType buildType = BuildType.Build, CancellationToken cancellationToken = default)
+	public async Task MsBuildAsync(string solutionOrProjectFilePath, BuildType buildType = BuildType.Build, BuildStartedFlags buildStartedFlags = BuildStartedFlags.UserFacing, CancellationToken cancellationToken = default)
 	{
 		if (_cancellationTokenSource is not null) throw new InvalidOperationException("A build is already in progress.");
 		_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -55,7 +56,7 @@ public class BuildService(ILogger<BuildService> logger)
 			hostServices: null,
 			flags: BuildRequestDataFlags.None);
 
-		BuildStarted.InvokeParallelFireAndForget();
+		BuildStarted.InvokeParallelFireAndForget(buildStartedFlags);
 		var timer = Stopwatch.StartNew();
 		var buildResult = await BuildManager.DefaultBuildManager.BuildAsync(buildParameters, buildRequest, _cancellationTokenSource.Token).ConfigureAwait(false);
 		timer.Stop();
