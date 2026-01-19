@@ -34,8 +34,10 @@ public partial class RunPanelTab : Control
 		});
 	}
     
-    public void ClearTerminal()
+	public void ClearTerminal()
 	{
+		// .Clear removes all text except for the bottom row, so lets make sure we have a blank line, and cursor at start
+		_terminal.Write("\r\n");
 		_terminal.Clear();
 	}
 }
