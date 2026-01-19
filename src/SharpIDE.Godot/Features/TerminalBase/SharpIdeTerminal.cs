@@ -1,3 +1,4 @@
+using System.Buffers;
 using GDExtensionBindgen;
 using Godot;
 
@@ -20,9 +21,21 @@ public partial class SharpIdeTerminal : Control
 	
 	public async Task WriteAsync(byte[] text)
 	{
-		await this.InvokeAsync(() => _terminal.Write(text));
+		var (processedArray, length, wasRented) = ProcessLineEndings(text);
+		try
+		{
+			await this.InvokeAsync(() => _terminal.Write(processedArray.AsSpan(0, length)));
+		}
+		finally
+		{
+			if (wasRented)
+			{
+				ArrayPool<byte>.Shared.Return(processedArray);
+			}
+		}
+		_previousArrayEndedInCr = text.Length > 0 && text[^1] == (byte)'\r';
 	}
-	
+
 	[RequiresGodotUiThread]
 	public void ClearTerminal()
 	{
