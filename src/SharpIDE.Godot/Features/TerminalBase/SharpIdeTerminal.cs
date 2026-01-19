@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Text;
 using GDExtensionBindgen;
 using Godot;
 
@@ -15,7 +16,8 @@ public partial class SharpIdeTerminal : Control
 
 	public void Write(string text)
 	{
-		_terminal.Write(text);
+		var bytes = Encoding.UTF8.GetBytes(text);
+		Write(bytes);
 	}
 	
 	public void Write(byte[] text)
