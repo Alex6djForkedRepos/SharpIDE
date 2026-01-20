@@ -15,7 +15,7 @@ namespace SharpIDE.Application.Features.Debugging;
 #pragma warning disable VSTHRD101
 public class DebuggingService
 {
-	private ConcurrentDictionary<DebuggerSessionId, DebugProtocolHost> _debugProtocolHosts = [];
+	private readonly ConcurrentDictionary<DebuggerSessionId, DebugProtocolHost> _debugProtocolHosts = [];
 
 	/// <returns>The debugging session ID</returns>
 	public async Task<DebuggerSessionId> Attach(int debuggeeProcessId, DebuggerExecutableInfo? debuggerExecutableInfo, Dictionary<SharpIdeFile, List<Breakpoint>> breakpointsByFile, SharpIdeProjectModel project, CancellationToken cancellationToken = default)
