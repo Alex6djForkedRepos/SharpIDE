@@ -37,6 +37,7 @@ public partial class SharpIdeTerminal : Control
 		_previousArrayEndedInCr = text.Length > 0 && text[^1] == (byte)'\r';
 	}
 
+	[RequiresGodotUiThread]
 	public void ClearTerminal()
 	{
 		// .Clear removes all text except for the bottom row, so lets make sure we have a blank line, and cursor at start
