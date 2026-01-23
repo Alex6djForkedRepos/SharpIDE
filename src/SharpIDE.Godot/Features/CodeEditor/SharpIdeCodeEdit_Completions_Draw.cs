@@ -49,7 +49,7 @@ public partial class SharpIdeCodeEdit
         var font = GetThemeFont(ThemeStringNames.Font);
         var fontSize = GetThemeFontSize(ThemeStringNames.FontSize);
         var ci = GetCanvasItem();
-        var availableCompletions = _codeCompletionOptions.Length; // TODO: Actually get from completions
+        var availableCompletions = _codeCompletionOptions.Length;
         var completionsToDisplay = Math.Min(availableCompletions, MaxLines);
         var rowHeight = GetLineHeight();
         var iconAreaSize = new Vector2I(rowHeight, rowHeight);
