@@ -1,5 +1,53 @@
 [gd_resource type="Theme" format=3 uid="uid://dc7l6bjhn61i5"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f60rw"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.1, 0.1, 0.1, 0.06666667)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_s0gn1"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.22, 0.22, 0.22, 0.21568628)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xtark"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.1, 0.1, 0.1, 0.09803922)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6nunt"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0.3372549)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3gh6f"]
 content_margin_left = 0.0
 content_margin_top = 0.0
@@ -13,6 +61,14 @@ corner_radius_bottom_left = 3
 corner_detail = 5
 
 [resource]
+Button/colors/font_color = Color(0.12, 0.12, 0.12, 1)
+Button/colors/font_disabled_color = Color(0.12, 0.12, 0.12, 0.5019608)
+Button/colors/font_hover_color = Color(0.12156863, 0.12156863, 0.12156863, 1)
+Button/colors/font_pressed_color = Color(0, 0, 0, 1)
+Button/styles/disabled = SubResource("StyleBoxFlat_f60rw")
+Button/styles/hover = SubResource("StyleBoxFlat_s0gn1")
+Button/styles/normal = SubResource("StyleBoxFlat_xtark")
+Button/styles/pressed = SubResource("StyleBoxFlat_6nunt")
 CodeEdit/colors/current_line_color = Color(0.05882353, 0.05882353, 0.05882353, 1)
 Gray500Label/base_type = &"Label"
 Gray500Label/colors/font_color = Color(0.49, 0.49, 0.49, 1)
