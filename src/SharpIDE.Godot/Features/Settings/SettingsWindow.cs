@@ -28,6 +28,8 @@ public partial class SettingsWindow : Window
         _uiScaleSpinBox.Value = Singletons.AppState.IdeSettings.UiScale;
         _debuggerFilePathLineEdit.Text = Singletons.AppState.IdeSettings.DebuggerExecutablePath;
         _debuggerUseSharpDbgCheckButton.ButtonPressed = Singletons.AppState.IdeSettings.DebuggerUseSharpDbg;
+        var themeOptionIndex = _themeOptionButton.GetOptionIndexOrNullForString(Singletons.AppState.IdeSettings.Theme);
+        if (themeOptionIndex is not null) _themeOptionButton.Selected = themeOptionIndex.Value;
     }
 
     private void OnUiScaleSpinBoxValueChanged(double value)
@@ -52,6 +54,7 @@ public partial class SettingsWindow : Window
     private void OnThemeItemSelected(long index)
     {
         var selectedTheme = _themeOptionButton.GetItemText((int)index);
+        Singletons.AppState.IdeSettings.Theme = selectedTheme;
         this.SetIdeTheme(selectedTheme);
     }
 }

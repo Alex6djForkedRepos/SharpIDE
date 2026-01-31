@@ -87,6 +87,21 @@ public static class NodeExtensions
         }
     }
 
+    extension(OptionButton optionButton)
+    {
+        public int? GetOptionIndexOrNullForString(string optionString)
+        {
+            for (var i = 0; i < optionButton.GetItemCount(); i++)
+            {
+                if (optionButton.GetItemText(i) == optionString)
+                {
+                    return i;
+                }
+            }
+            return null;
+        }
+    }
+
     extension(TreeItem treeItem)
     {
         public T? GetTypedMetadata<T>(int column) where T : RefCounted?

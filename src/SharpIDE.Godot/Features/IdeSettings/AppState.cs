@@ -13,6 +13,7 @@ public class IdeSettings
     public string? DebuggerExecutablePath { get; set; }
     public bool DebuggerUseSharpDbg { get; set; } = true;
     public float UiScale { get; set; } = 1.0f;
+    public string Theme { get; set; } = "Dark";
 }
 
 public record RecentSln
