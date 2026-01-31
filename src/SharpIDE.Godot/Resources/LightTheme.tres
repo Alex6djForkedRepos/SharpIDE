@@ -108,6 +108,43 @@ corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 corner_detail = 5
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5ta8e"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0.05882353)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dsk6k"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.1, 0.1, 0.1, 0.6)
+draw_center = false
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_njudc"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0.13725491)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_guqd5"]
 content_margin_left = 4.0
 content_margin_top = 4.0
@@ -231,6 +268,10 @@ Gray600Label/base_type = &"Label"
 Gray600Label/colors/font_color = Color(0.33, 0.33, 0.33, 1)
 Gray700Label/base_type = &"Label"
 Gray700Label/colors/font_color = Color(0.17, 0.17, 0.17, 1)
+IdeSidebarButton/base_type = &"Button"
+IdeSidebarButton/styles/hover = SubResource("StyleBoxFlat_5ta8e")
+IdeSidebarButton/styles/normal = SubResource("StyleBoxFlat_dsk6k")
+IdeSidebarButton/styles/pressed = SubResource("StyleBoxFlat_njudc")
 Label/colors/font_color = Color(0.17, 0.17, 0.17, 1)
 LineEdit/colors/caret_color = Color(0.05, 0.05, 0.05, 1)
 LineEdit/colors/font_color = Color(0.12, 0.12, 0.12, 1)
