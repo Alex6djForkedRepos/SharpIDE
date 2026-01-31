@@ -27,23 +27,23 @@ public static class EditorThemeColours
     
     public static readonly EditorThemeColorSet Dark = new EditorThemeColorSet
     {
-        Orange = CachedColors.Orange,
-        White = CachedColors.White,
-        Yellow = CachedColors.Yellow,
-        CommentGreen = CachedColors.CommentGreen,
-        KeywordBlue = CachedColors.KeywordBlue,
-        LightOrangeBrown = CachedColors.LightOrangeBrown,
-        NumberGreen = CachedColors.NumberGreen,
-        InterfaceGreen = CachedColors.InterfaceGreen,
-        ClassGreen = CachedColors.ClassGreen,
-        VariableBlue = CachedColors.VariableBlue,
-        Gray = CachedColors.Gray,
-        Pink = CachedColors.Pink,
-        ErrorRed = CachedColors.ErrorRed,
+        Orange = TextEditorDotnetColoursDark.Orange,
+        White = TextEditorDotnetColoursDark.White,
+        Yellow = TextEditorDotnetColoursDark.Yellow,
+        CommentGreen = TextEditorDotnetColoursDark.CommentGreen,
+        KeywordBlue = TextEditorDotnetColoursDark.KeywordBlue,
+        LightOrangeBrown = TextEditorDotnetColoursDark.LightOrangeBrown,
+        NumberGreen = TextEditorDotnetColoursDark.NumberGreen,
+        InterfaceGreen = TextEditorDotnetColoursDark.InterfaceGreen,
+        ClassGreen = TextEditorDotnetColoursDark.ClassGreen,
+        VariableBlue = TextEditorDotnetColoursDark.VariableBlue,
+        Gray = TextEditorDotnetColoursDark.Gray,
+        Pink = TextEditorDotnetColoursDark.Pink,
+        ErrorRed = TextEditorDotnetColoursDark.ErrorRed,
         
-        RazorComponentGreen = CachedColors.RazorComponentGreen,
-        RazorMetaCodePurple = CachedColors.RazorMetaCodePurple,
-        HtmlDelimiterGray = CachedColors.HtmlDelimiterGray
+        RazorComponentGreen = TextEditorDotnetColoursDark.RazorComponentGreen,
+        RazorMetaCodePurple = TextEditorDotnetColoursDark.RazorMetaCodePurple,
+        HtmlDelimiterGray = TextEditorDotnetColoursDark.HtmlDelimiterGray
     };
 }
 
@@ -68,7 +68,7 @@ public class EditorThemeColorSet
     public required Color HtmlDelimiterGray;
 }
 
-public static class CachedColors
+public static class TextEditorDotnetColoursDark
 {
     public static readonly Color Orange = new("f27718");
     public static readonly Color White = new("dcdcdc");
