@@ -101,6 +101,15 @@ public partial class SharpIdeCodeEdit
         var cursorPosition = await this.InvokeAsync(() => GetCaretPosition());
         var linePosition = new LinePosition(cursorPosition.line, cursorPosition.col);
         var filteredCompletions = RoslynAnalysis.FilterCompletions(_currentFile, Text, linePosition, _completionList, _completionTrigger!.Value, filterReason);
+        if (filteredCompletions.Length is 0)
+        {
+	        await this.InvokeAsync(() =>
+	        {
+		        ResetCompletionPopupState();
+		        QueueRedraw();
+	        });
+	        return;
+        }
         var newSelectedIndex = 0;
         if (_codeCompletionOptions.IsDefaultOrEmpty is false)
         {
