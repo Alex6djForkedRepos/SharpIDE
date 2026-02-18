@@ -7,6 +7,11 @@ namespace SharpIDE.Godot.Features.CodeEditor;
 
 public partial class SharpIdeCodeEdit
 {
+    private void SetSelectedCompletion(int index)
+    {
+        _codeCompletionCurrentSelected = index;
+    }
+    
     private bool CompletionsPopupTryConsumeGuiInput(InputEvent @event)
     {
         var isCodeCompletionPopupOpen = _codeCompletionOptions.Length is not 0;
@@ -38,7 +43,7 @@ public partial class SharpIdeCodeEdit
                     _codeCompletionForceItemCenter = _codeCompletionCurrentSelected;
                 }
 
-                _codeCompletionCurrentSelected = codeCompletionIndex.Value;
+                SetSelectedCompletion(codeCompletionIndex.Value);
                 if (mouseEvent is { DoubleClick: true })
                 {
                     ApplySelectedCodeCompletion();
@@ -55,12 +60,13 @@ public partial class SharpIdeCodeEdit
                 if (_codeCompletionRect.HasPoint((Vector2I)scrollEvent.Position))
                 {
                     int scrollAmount = scrollEvent.ButtonIndex is MouseButton.WheelDown ? 1 : -1;
-                    _codeCompletionCurrentSelected = Mathf.Clamp(
+                    var selectedIndex = Mathf.Clamp(
                         _codeCompletionCurrentSelected + scrollAmount,
                         0,
                         _codeCompletionOptions.Length - 1
                     );
                     _codeCompletionForceItemCenter = -1;
+                    SetSelectedCompletion(selectedIndex);
                     QueueRedraw();
                     return true;
                 }
@@ -74,12 +80,13 @@ public partial class SharpIdeCodeEdit
             if (@event is InputEventKey { Pressed: true, Keycode: Key.Up or Key.Down } inputEventKey)
             {
                 var delta = inputEventKey.Keycode is Key.Up ? -1 : 1;
-                _codeCompletionCurrentSelected = Mathf.Clamp(
+                var selectedIndex = Mathf.Clamp(
                     _codeCompletionCurrentSelected + delta,
                     0,
                     _codeCompletionOptions.Length - 1
                 );
                 _codeCompletionForceItemCenter = -1;
+                SetSelectedCompletion(selectedIndex);
                 QueueRedraw();
                 return true;
             }
