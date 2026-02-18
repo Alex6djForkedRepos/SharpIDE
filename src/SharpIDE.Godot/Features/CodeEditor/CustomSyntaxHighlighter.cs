@@ -17,11 +17,11 @@ public partial class CustomHighlighter : SyntaxHighlighter
     private System.Collections.Generic.Dictionary<int, ImmutableArray<SharpIdeRazorClassifiedSpan>> _razorClassifiedSpansByLine = [];
     private System.Collections.Generic.Dictionary<int, ImmutableArray<SharpIdeClassifiedSpan>> _classifiedSpansByLine = [];
 
-    private EditorThemeColorSet _colourSetForTheme = null!;
+    public EditorThemeColorSet ColourSetForTheme = null!;
     
     public void UpdateThemeColorCache(LightOrDarkTheme themeType)
     {
-        _colourSetForTheme = themeType switch
+        ColourSetForTheme = themeType switch
         {
             LightOrDarkTheme.Light => EditorThemeColours.Light,
             LightOrDarkTheme.Dark => EditorThemeColours.Dark,
@@ -173,13 +173,13 @@ public partial class CustomHighlighter : SyntaxHighlighter
     {
         return kind switch
         {
-            SharpIdeRazorSpanKind.Code => GetColorForClassification(codeClassificationType!),
-            SharpIdeRazorSpanKind.Comment => _colourSetForTheme.CommentGreen, // green
-            SharpIdeRazorSpanKind.MetaCode => _colourSetForTheme.RazorMetaCodePurple, // purple
+            SharpIdeRazorSpanKind.Code => ClassificationToColorMapper.GetColorForClassification(ColourSetForTheme, codeClassificationType!),
+            SharpIdeRazorSpanKind.Comment => ColourSetForTheme.CommentGreen, // green
+            SharpIdeRazorSpanKind.MetaCode => ColourSetForTheme.RazorMetaCodePurple, // purple
             SharpIdeRazorSpanKind.Markup => GetColorForMarkupSpanKind(vsSemanticRangeType),
-            SharpIdeRazorSpanKind.Transition => _colourSetForTheme.RazorMetaCodePurple, // purple
-            SharpIdeRazorSpanKind.None => _colourSetForTheme.White,
-            _ => _colourSetForTheme.White
+            SharpIdeRazorSpanKind.Transition => ColourSetForTheme.RazorMetaCodePurple, // purple
+            SharpIdeRazorSpanKind.None => ColourSetForTheme.White,
+            _ => ColourSetForTheme.White
         };
     }
     
@@ -187,16 +187,16 @@ public partial class CustomHighlighter : SyntaxHighlighter
     {
         return vsSemanticRangeType switch
         {
-            "razorDirective" or "razorTransition" => _colourSetForTheme.RazorMetaCodePurple, // purple
-            "markupTagDelimiter" => _colourSetForTheme.HtmlDelimiterGray, // gray
-            "markupTextLiteral" => _colourSetForTheme.White, // white
-            "markupElement" => _colourSetForTheme.KeywordBlue, // blue
-            "razorComponentElement" => _colourSetForTheme.RazorComponentGreen, // dark green
-            "razorComponentAttribute" => _colourSetForTheme.White, // white
-            "razorComment" or "razorCommentStar" or "razorCommentTransition" => _colourSetForTheme.CommentGreen, // green
-            "markupOperator" => _colourSetForTheme.White, // white
-            "markupAttributeQuote" => _colourSetForTheme.White, // white
-            _ => _colourSetForTheme.White // default to white
+            "razorDirective" or "razorTransition" => ColourSetForTheme.RazorMetaCodePurple, // purple
+            "markupTagDelimiter" => ColourSetForTheme.HtmlDelimiterGray, // gray
+            "markupTextLiteral" => ColourSetForTheme.White, // white
+            "markupElement" => ColourSetForTheme.KeywordBlue, // blue
+            "razorComponentElement" => ColourSetForTheme.RazorComponentGreen, // dark green
+            "razorComponentAttribute" => ColourSetForTheme.White, // white
+            "razorComment" or "razorCommentStar" or "razorCommentTransition" => ColourSetForTheme.CommentGreen, // green
+            "markupOperator" => ColourSetForTheme.White, // white
+            "markupAttributeQuote" => ColourSetForTheme.White, // white
+            _ => ColourSetForTheme.White // default to white
         };
     }
 
@@ -226,7 +226,7 @@ public partial class CustomHighlighter : SyntaxHighlighter
             // Build the highlight entry
             var highlightInfo = new Dictionary
             {
-                { ColorStringName, GetColorForClassification(classifiedSpans.Single().ClassificationType) }
+                { ColorStringName, ClassificationToColorMapper.GetColorForClassification(ColourSetForTheme, classifiedSpans.Single().ClassificationType) }
             };
 
             highlights[columnIndex] = highlightInfo;
@@ -235,71 +235,5 @@ public partial class CustomHighlighter : SyntaxHighlighter
         return highlights;
     }
     
-    private Color GetColorForClassification(string classificationType)
-    {
-        var colour = classificationType switch
-        {
-            // Keywords
-            "keyword" => _colourSetForTheme.KeywordBlue,
-            "keyword - control" => _colourSetForTheme.KeywordBlue,
-            "preprocessor keyword" => _colourSetForTheme.KeywordBlue,
-
-            // Literals & comments
-            "string" => _colourSetForTheme.LightOrangeBrown,
-            "string - verbatim" => _colourSetForTheme.LightOrangeBrown,
-            "string - escape character" => _colourSetForTheme.Orange,
-            "comment" => _colourSetForTheme.CommentGreen,
-            "number" => _colourSetForTheme.NumberGreen,
-
-            // Types (User Types)
-            "class name" => _colourSetForTheme.ClassGreen,
-            "record class name" => _colourSetForTheme.ClassGreen,
-            "struct name" => _colourSetForTheme.ClassGreen,
-            "record struct name" => _colourSetForTheme.ClassGreen,
-            "interface name" => _colourSetForTheme.InterfaceGreen,
-            "enum name" => _colourSetForTheme.InterfaceGreen,
-            "namespace name" => _colourSetForTheme.White,
-            
-            // Identifiers & members
-            "identifier" => _colourSetForTheme.White,
-            "constant name" => _colourSetForTheme.White,
-            "enum member name" => _colourSetForTheme.White,
-            "method name" => _colourSetForTheme.Yellow,
-            "extension method name" => _colourSetForTheme.Yellow,
-            "property name" => _colourSetForTheme.White,
-            "field name" => _colourSetForTheme.White,
-            "static symbol" => _colourSetForTheme.Yellow, // ??
-            "parameter name" => _colourSetForTheme.VariableBlue,
-            "local name" => _colourSetForTheme.VariableBlue,
-            "type parameter name" => _colourSetForTheme.ClassGreen,
-            "delegate name" => _colourSetForTheme.ClassGreen,
-            "event name" => _colourSetForTheme.White,
-            "label name" => _colourSetForTheme.White,
-
-            // Punctuation & operators
-            "operator" => _colourSetForTheme.White,
-            "operator - overloaded" => _colourSetForTheme.Yellow,
-            "punctuation" => _colourSetForTheme.White,
-            
-            // Preprocessor
-            "preprocessor text" => _colourSetForTheme.White,
-            
-            // Xml comments
-            "xml doc comment - delimiter" => _colourSetForTheme.CommentGreen,
-            "xml doc comment - name" => _colourSetForTheme.White,
-            "xml doc comment - text" => _colourSetForTheme.CommentGreen,
-            "xml doc comment - attribute name" => _colourSetForTheme.LightOrangeBrown,
-            "xml doc comment - attribute quotes" => _colourSetForTheme.LightOrangeBrown,
-
-            // Misc
-            "excluded code" => _colourSetForTheme.Gray,
-
-            _ => _colourSetForTheme.Pink // pink, warning color for unhandled classifications
-        };
-        if (colour == _colourSetForTheme.Pink)
-        {
-            GD.PrintErr($"Unhandled classification type: '{classificationType}'");
-        }
-        return colour;
-    }
+    
 }

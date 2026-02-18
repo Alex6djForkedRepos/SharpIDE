@@ -20,7 +20,7 @@ public partial class SharpIdeCodeEdit
             {
                 _completionDescriptionLabel.Clear();
                 _completionDescriptionWindow.Size = new Vector2I(10, 10); // Used to shrink the window, as ChildControlsChanged() doesn't seem to handle shrinking in this case?
-                CompletionDescriptionTooltip.WriteToCompletionDescriptionLabel(_completionDescriptionLabel, _selectedCompletionDescription);
+                CompletionDescriptionTooltip.WriteToCompletionDescriptionLabel(_completionDescriptionLabel, _selectedCompletionDescription, _syntaxHighlighter.ColourSetForTheme);
                 if (_completionDescriptionWindow.Visible is false)
                 {
                     _completionDescriptionWindow.Show();
