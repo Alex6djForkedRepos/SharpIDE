@@ -62,6 +62,8 @@ public static class ClassificationToColorMapper
 
             // Misc
             "excluded code" => editorThemeColorSet.Gray,
+            "text" => editorThemeColorSet.White,
+            "whitespace" => editorThemeColorSet.White,
 
             _ => editorThemeColorSet.Pink // pink, warning color for unhandled classifications
         };
