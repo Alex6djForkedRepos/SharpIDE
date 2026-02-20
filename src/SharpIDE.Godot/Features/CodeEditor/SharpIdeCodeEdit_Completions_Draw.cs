@@ -32,6 +32,7 @@ public partial class SharpIdeCodeEdit
         return lineIndex;
     }
 
+    private TextLine _completionTextLine = new TextLine();
     private void DrawCompletionsPopup()
     {
         var drawCodeCompletion = _codeCompletionOptions.Length > 0;
@@ -224,11 +225,13 @@ public partial class SharpIdeCodeEdit
 
             var sharpIdeCompletionItem = _codeCompletionOptions[l];
             var displayText = sharpIdeCompletionItem.CompletionItem.DisplayText;
-            TextLine tl = new TextLine();
-            tl.AddString(displayText, font, fontSize, lang);
-            tl.AddString(sharpIdeCompletionItem.CompletionItem.DisplayTextSuffix, font, fontSize, lang);
+            
+            var textLine = _completionTextLine;
+            textLine.Clear();
+            textLine.AddString(displayText, font, fontSize, lang);
+            textLine.AddString(sharpIdeCompletionItem.CompletionItem.DisplayTextSuffix, font, fontSize, lang);
 
-            float yofs = (rowHeight - tl.GetSize().Y) / 2;
+            float yofs = (rowHeight - textLine.GetSize().Y) / 2;
             Vector2 titlePos = new Vector2(
                 _codeCompletionRect.Position.X,
                 _codeCompletionRect.Position.Y + i * rowHeight + yofs
@@ -256,9 +259,9 @@ public partial class SharpIdeCodeEdit
 
             titlePos.X = iconArea.Position.X + iconArea.Size.X + codeCompletionIconSeparation;
 
-            tl.Width = _codeCompletionRect.Size.X - (iconAreaSize.X + codeCompletionIconSeparation);
+            textLine.Width = _codeCompletionRect.Size.X - (iconAreaSize.X + codeCompletionIconSeparation);
             
-            tl.Alignment = HorizontalAlignment.Left;
+            textLine.Alignment = HorizontalAlignment.Left;
             
 
             Vector2 matchPos = new Vector2(
@@ -290,7 +293,7 @@ public partial class SharpIdeCodeEdit
             }
 
             var fontColour = Colors.White;
-            tl.Draw(ci, titlePos, fontColour);
+            textLine.Draw(ci, titlePos, fontColour);
         }
 
         /* Draw a small scroll rectangle to show a position in the options. */
