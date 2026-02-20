@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Godot;
 using SharpIDE.Application.Features.Analysis;
 
@@ -54,10 +54,16 @@ public partial class SharpIdeCodeEdit
         var rowHeight = GetLineHeight();
         var iconAreaSize = new Vector2I(rowHeight, rowHeight);
 
-        var completionMaxWidth = 200;
-        var codeCompletionLongestLine = Math.Min(completionMaxWidth,
-            _codeCompletionOptions.MaxBy(s => s.CompletionItem.DisplayText.Length)!.CompletionItem.DisplayText.Length * fontSize);
-        codeCompletionLongestLine = 500;
+        var lineOffsetEstimate = Mathf.Clamp(
+            (_codeCompletionForceItemCenter < 0 ? _codeCompletionCurrentSelected : _codeCompletionForceItemCenter) - completionsToDisplay / 2,
+            0, availableCompletions - completionsToDisplay
+        );
+        var longestCompletionItem = _codeCompletionOptions
+            .Skip(lineOffsetEstimate)
+            .Take(completionsToDisplay)
+            .MaxBy(s => s.CompletionItem.DisplayText.Length)!;
+        
+        var codeCompletionLongestLine = (int)font.GetStringSize(longestCompletionItem.CompletionItem.DisplayText, HorizontalAlignment.Left, -1, fontSize).X + 10; // add some padding to prevent clipping
 
         _codeCompletionRect.Size = new Vector2I(
             codeCompletionLongestLine + codeCompletionIconSeparation + iconAreaSize.X + 2,
