@@ -125,12 +125,27 @@ public partial class SharpIdeCodeEdit
 
         if (@event is InputEventKey { Pressed: true, Unicode: not 0 } keyEvent)
         {
-            
             var unicodeString = char.ConvertFromUtf32((int)keyEvent.Unicode);
-            if (isCodeCompletionPopupOpen && keyEvent.Unicode >= 32)
+            if (isCodeCompletionPopupOpen)
             {
-                _pendingCompletionFilterReason = CompletionFilterReason.Insertion;
-                return false; // Let the text update happen
+                if (unicodeString is " ")
+                {
+                    ResetCompletionPopupState();
+                    QueueRedraw();
+                    return false;
+                }
+                if (unicodeString is ".")
+                {
+                    ResetCompletionPopupState();
+                    QueueRedraw();
+                    _pendingCompletionTrigger = CompletionTrigger.CreateInsertionTrigger('.');
+                    return false;
+                }
+                if (keyEvent.Unicode > 32)
+                {
+                    _pendingCompletionFilterReason = CompletionFilterReason.Insertion;
+                    return false; // Let the text update happen
+                }
             }
 
             if (isCodeCompletionPopupOpen is false && _codeCompletionTriggers.Contains(unicodeString, StringComparer.OrdinalIgnoreCase))
