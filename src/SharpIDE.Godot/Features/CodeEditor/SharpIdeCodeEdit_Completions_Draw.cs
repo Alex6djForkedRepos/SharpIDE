@@ -62,9 +62,9 @@ public partial class SharpIdeCodeEdit
         var longestCompletionItem = _codeCompletionOptions
             .Skip(lineOffsetEstimate)
             .Take(completionsToDisplay)
-            .MaxBy(s => s.CompletionItem.DisplayText.Length)!;
-        
-        var codeCompletionLongestLine = (int)font.GetStringSize(longestCompletionItem.CompletionItem.DisplayText, HorizontalAlignment.Left, -1, fontSize).X + 10; // add some padding to prevent clipping
+            .MaxBy(s => s.CompletionItem.DisplayText.Length + s.CompletionItem.DisplayTextSuffix.Length + s.CompletionItem.InlineDescription.Length);
+
+        var codeCompletionLongestLine = (int)font.GetStringsSize([longestCompletionItem.CompletionItem.GetEntireDisplayText(), " ", longestCompletionItem.CompletionItem.InlineDescription], HorizontalAlignment.Left, -1, fontSize).X + 10; // add some padding to prevent clipping
         if (codeCompletionLongestLine < _codeCompletionMinLineWidth)
         {
             codeCompletionLongestLine = _codeCompletionMinLineWidth;

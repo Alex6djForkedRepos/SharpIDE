@@ -87,6 +87,28 @@ public static class NodeExtensions
         }
     }
 
+    extension(Font font)
+    {
+        public Vector2 GetStringsSize(
+            ReadOnlySpan<string> strings,
+            HorizontalAlignment alignment = HorizontalAlignment.Left,
+            float width = -1f,
+            int fontSize = 16 /*0x10*/,
+            TextServer.JustificationFlag justificationFlags = TextServer.JustificationFlag.Kashida | TextServer.JustificationFlag.WordBound,
+            TextServer.Direction direction = TextServer.Direction.Auto,
+            TextServer.Orientation orientation = TextServer.Orientation.Horizontal)
+        {
+            var size = Vector2.Zero;
+            foreach (var str in strings)
+            {
+                var strSize = font.GetStringSize(str, alignment, width, fontSize, justificationFlags, direction, orientation);
+                size.X += strSize.X;
+                size.Y = Math.Max(size.Y, strSize.Y);
+            }
+            return size;
+        }
+    }
+
     extension(OptionButton optionButton)
     {
         public int? GetOptionIndexOrNullForString(string optionString)
