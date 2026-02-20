@@ -177,7 +177,7 @@ public partial class SharpIdeCodeEdit
 		// Clamp the X position so it never overflows to the right
 		int finalX = Math.Min(desiredX, maxX);
 
-        const int styleBoxOffset = 5;
+        const int styleBoxOffset = 3;
 		_codeCompletionRect.Position = new Vector2I(finalX, _codeCompletionRect.Position.Y + styleBoxOffset);
 
 		var completionStyle = GetThemeStylebox(ThemeStringNames.Completion);
@@ -334,9 +334,10 @@ public partial class SharpIdeCodeEdit
             );
         }
         
+        const int completionDescriptionStyleBoxOffset = 2;
         var descriptionPos = new Vector2I(
             _codeCompletionRect.Position.X + _codeCompletionRect.Size.X + scrollWidth + 5,
-            _codeCompletionRect.Position.Y - styleBoxOffset
+            _codeCompletionRect.Position.Y - styleBoxOffset - completionDescriptionStyleBoxOffset
         );
         _completionDescriptionWindow.Position = descriptionPos + (Vector2I)GlobalPosition;
     }
