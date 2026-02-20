@@ -11,13 +11,10 @@ public static class CompletionDescriptionTooltip
 	{
 		var quickInfoElements = completionDescription.TaggedParts.ToInteractiveTextElements(null);
 		label.PushColor(TextEditorDotnetColoursDark.White);
-		label.PushFont(MonospaceFont);
 		foreach (var quickInfoElement in quickInfoElements)
 		{
 			WriteQuickInfoElement(label, quickInfoElement, editorThemeColorSet);
 		}
-		//label.AddNamespace(symbol);
-		label.Pop(); // font
 		label.Pop(); // color
 		return label;
 	}
@@ -31,8 +28,11 @@ public static class CompletionDescriptionTooltip
 				{
 					var colour = ClassificationToColorMapper.GetColorForClassification(editorThemeColorSet, quickInfoClassifiedTextRun.ClassificationTypeName);
 					label.PushColor(colour);
+					var isMonospace = quickInfoClassifiedTextRun.ClassificationTypeName is not ("text" or "whitespace");
+					if (isMonospace) label.PushFont(MonospaceFont);
 					label.AddText(quickInfoClassifiedTextRun.Text);
 					label.Pop();
+					if (isMonospace) label.Pop();
 				}
 				break;
 			case QuickInfoContainerElement containerElement:
