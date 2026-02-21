@@ -7,7 +7,8 @@ public partial class SharpIdeCodeEdit
 {
     private bool _isMethodSignatureHelpPopupOpen;
     private LinePositionSpan _signatureHelpApplicableSpan;
-
+    private LinePosition? _previousCaretPositionForMethodSignatureHelp;
+    
     private void CloseMethodSignatureHelpWindow()
     {
         _isMethodSignatureHelpPopupOpen = false;
@@ -18,11 +19,17 @@ public partial class SharpIdeCodeEdit
     {
         if (_isMethodSignatureHelpPopupOpen)
         {
-            var caretPos = GetCaretPosition();
-            var caretPositionLinePosition = new LinePosition(caretPos.line, caretPos.col);
+            var (caretLine, caretCol) = GetCaretPosition();
+            var caretPositionLinePosition = new LinePosition(caretLine, caretCol);
             if (caretPositionLinePosition < _signatureHelpApplicableSpan.Start || caretPositionLinePosition > _signatureHelpApplicableSpan.End)
             {
                 CloseMethodSignatureHelpWindow();
+                return false;
+            }
+
+            if (_previousCaretPositionForMethodSignatureHelp != caretPositionLinePosition)
+            {
+                UpdateSignatureHelpTooltip(caretLine, caretCol);
                 return false;
             }
         }
@@ -35,27 +42,33 @@ public partial class SharpIdeCodeEdit
         else if (@event.IsActionPressed(InputStringNames.CodeEditorRequestSignatureInfo))
         {
             var (caretLine, caretColumn) = GetCaretPosition();
-            var caretPos = GetPosAtLineColumn(caretLine, caretColumn);
-            _ = Task.GodotRun(async () =>
-            {
-                var linePos = new LinePosition(caretLine, caretColumn);
-                var sharpIdeSignatureHelpItems = await _roslynAnalysis.GetMethodSignatureInfo(_currentFile, linePos);
-                if (sharpIdeSignatureHelpItems is null) return;
-                var signatureHelpItems = sharpIdeSignatureHelpItems.Items;
-                _signatureHelpApplicableSpan = sharpIdeSignatureHelpItems.ApplicableSpan;
-                await this.InvokeAsync(() =>
-                {
-                    var richTextLabel = _methodSignatureHelpWindow.GetNode<RichTextLabel>("PanelContainer/RichTextLabel");
-                    richTextLabel.Clear();
-                    _methodSignatureHelpWindow.Size = new Vector2I(10, 10); // Used to shrink the window, as ChildControlsChanged() doesn't seem to handle shrinking in this case?
-                    MethodSignatureHelpTooltip.WriteToMethodSignatureHelpLabel(richTextLabel, signatureHelpItems, _syntaxHighlighter.ColourSetForTheme);
-                    _methodSignatureHelpWindow.Position = (Vector2I)GetGlobalPosition() + caretPos;
-                    _methodSignatureHelpWindow.Show();
-                    _isMethodSignatureHelpPopupOpen = true;
-                });
-            });
+            UpdateSignatureHelpTooltip(caretLine, caretColumn); 
+            _methodSignatureHelpWindow.Show(); 
+            _isMethodSignatureHelpPopupOpen = true;
             return true;
         }
         return false;
+    }
+
+    private void UpdateSignatureHelpTooltip(int caretLine, int caretColumn)
+    {
+        var caretPos = GetPosAtLineColumn(caretLine, caretColumn);
+        _ = Task.GodotRun(async () =>
+        {
+            var linePos = new LinePosition(caretLine, caretColumn);
+            var sharpIdeSignatureHelpItems = await _roslynAnalysis.GetMethodSignatureInfo(_currentFile, linePos);
+            if (sharpIdeSignatureHelpItems is null) return;
+            var signatureHelpItems = sharpIdeSignatureHelpItems.Items;
+            _signatureHelpApplicableSpan = sharpIdeSignatureHelpItems.ApplicableSpan;
+            await this.InvokeAsync(() =>
+            {
+                var richTextLabel = _methodSignatureHelpWindow.GetNode<RichTextLabel>("PanelContainer/RichTextLabel");
+                richTextLabel.Clear();
+                _methodSignatureHelpWindow.Size = new Vector2I(10, 10); // Used to shrink the window, as ChildControlsChanged() doesn't seem to handle shrinking in this case?
+                MethodSignatureHelpTooltip.WriteToMethodSignatureHelpLabel(richTextLabel, signatureHelpItems, _syntaxHighlighter.ColourSetForTheme);
+                _methodSignatureHelpWindow.Position = (Vector2I)GetGlobalPosition() + caretPos;
+                _previousCaretPositionForMethodSignatureHelp = linePos;
+            });
+        });
     }
 }
