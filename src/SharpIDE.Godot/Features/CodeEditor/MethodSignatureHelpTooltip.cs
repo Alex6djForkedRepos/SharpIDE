@@ -60,7 +60,7 @@ public static class MethodSignatureHelpTooltip
 			}
 
 			var selectedParameterIndex = signatureHelpItems.SemanticParameterIndex;
-			var selectedParameter = signatureHelpItems.SyntacticArgumentCount > 0 ? parameters[selectedParameterIndex] : null;
+			var selectedParameter = parameters.ElementAtOrDefault(selectedParameterIndex);
 			var parameterDocumentation = selectedParameter?.DocumentationFactory(CancellationToken.None).ToImmutableArray().ToInteractiveTextElements(null) ?? [];
 			if (parameterDocumentation.IsDefaultOrEmpty is false)
 			{
