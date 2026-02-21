@@ -58,6 +58,24 @@ public static class MethodSignatureHelpTooltip
 			{
 				CompletionDescriptionTooltip.WriteQuickInfoElement(richTextLabel, quickInfoElement, editorThemeColorSet);
 			}
+
+			var selectedParameterIndex = signatureHelpItems.SemanticParameterIndex;
+			var selectedParameter = parameters[selectedParameterIndex];
+			var parameterDocumentation = selectedParameter.DocumentationFactory(CancellationToken.None).ToImmutableArray().ToInteractiveTextElements(null);
+			if (parameterDocumentation.IsDefaultOrEmpty is false)
+			{
+				richTextLabel.Newline();
+				richTextLabel.PushFont(MonospaceFont);
+				richTextLabel.PushColor(editorThemeColorSet.VariableBlue);
+				richTextLabel.AppendText(selectedParameter.Name);
+				richTextLabel.Pop(); // color
+				richTextLabel.AppendText(": ");
+				richTextLabel.Pop(); // font
+				foreach (var parameterDocumentationQuickInfoElement in parameterDocumentation)
+				{
+					CompletionDescriptionTooltip.WriteQuickInfoElement(richTextLabel, parameterDocumentationQuickInfoElement, editorThemeColorSet);
+				}
+			}
 			richTextLabel.Pop(); // cell
 			if (i < signatureHelpItems.Items.Count - 1)
 			{
