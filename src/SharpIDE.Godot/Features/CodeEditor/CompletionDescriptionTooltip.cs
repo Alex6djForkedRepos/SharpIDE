@@ -32,7 +32,9 @@ public static class CompletionDescriptionTooltip
 					label.PushColor(colour);
 					var isMonospace = quickInfoClassifiedTextRun.ClassificationTypeName is not ("text" or "whitespace");
 					if (isMonospace) label.PushFont(bold ? MonospaceBoldFont : MonospaceFont);
+					if (bold) label.PushUnderline();
 					label.AddText(quickInfoClassifiedTextRun.Text);
+					if (bold) label.Pop();
 					label.Pop();
 					if (isMonospace) label.Pop();
 				}
