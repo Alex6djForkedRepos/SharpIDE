@@ -24,6 +24,7 @@ using Microsoft.CodeAnalysis.Remote.Razor.ProjectSystem;
 using Microsoft.CodeAnalysis.Remote.Razor.SemanticTokens;
 using Microsoft.CodeAnalysis.Rename;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.SignatureHelp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.Logging;
@@ -59,6 +60,7 @@ public partial class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService
 	private static ICodeFixService? _codeFixService;
 	private static ICodeRefactoringService? _codeRefactoringService;
 	private static IDocumentMappingService? _documentMappingService;
+	private static SignatureHelpService _signatureHelpService = null!;
 	private static HashSet<CodeRefactoringProvider> _codeRefactoringProviders = [];
 	private static HashSet<CodeFixProvider> _codeFixProviders = [];
 
@@ -94,7 +96,8 @@ public partial class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService
 			using var __ = SharpIdeOtel.Source.StartActivity("CreateWorkspace");
 			var configuration = new ContainerConfiguration()
 				.WithAssemblies(MefHostServices.DefaultAssemblies)
-				.WithAssembly(typeof(RemoteSnapshotManager).Assembly);
+				.WithAssembly(typeof(RemoteSnapshotManager).Assembly)
+				.WithPart<PythiaStub>();
 
 			// TODO: dispose container at some point?
 			var container = configuration.CreateContainer();
@@ -108,6 +111,7 @@ public partial class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService
 
 			_codeFixService = container.GetExports<ICodeFixService>().FirstOrDefault();
 			_codeRefactoringService = container.GetExports<ICodeRefactoringService>().FirstOrDefault();
+			_signatureHelpService = container.GetExports<SignatureHelpService>().FirstOrDefault()!;
 
 			_semanticTokensLegendService = (RemoteSemanticTokensLegendService)container.GetExports<ISemanticTokensLegendService>().FirstOrDefault()!;
 			_semanticTokensLegendService!.OnLspInitialized(new RemoteClientLSPInitializationOptions
@@ -622,6 +626,34 @@ public partial class RoslynAnalysis(ILogger<RoslynAnalysis> logger, BuildService
 		var completionService = CompletionService.GetService(document);
 		var description = await completionService!.GetDescriptionAsync(document, completionItem, cancellationToken);
 		return description!;
+	}
+
+	public async Task<SignatureHelpItems?> GetMethodSignatureInfo(SharpIdeFile file, LinePosition linePosition, CancellationToken cancellationToken = default)
+	{
+		await _solutionLoadedTcs.Task;
+		var document = await GetDocumentForSharpIdeFile(file, cancellationToken);
+		var sourceText = await document.GetTextAsync(cancellationToken);
+		var position = sourceText.Lines.GetPosition(linePosition);
+
+		// var semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken);
+		// var syntaxRoot = await document.GetRequiredSyntaxRootAsync(cancellationToken);
+		// var token = syntaxRoot.FindToken(position);
+		// var argumentListSyntax = token.Parent;
+		// var invocationExpressionSyntax = argumentListSyntax?.FirstAncestorOrSelf<InvocationExpressionSyntax>();
+		// if (invocationExpressionSyntax is null) return null;
+		// var symbolInfo = semanticModel.GetSymbolInfo(invocationExpressionSyntax, cancellationToken);
+		// var symbol = symbolInfo.Symbol ?? symbolInfo.CandidateSymbols.FirstOrDefault();
+		// if (symbol is not IMethodSymbol methodSymbol) return null;
+
+		var triggerInfo = new SignatureHelpTriggerInfo(SignatureHelpTriggerReason.InvokeSignatureHelpCommand);
+		var (_, signatureHelpItems) = await _signatureHelpService.GetSignatureHelpAsync(document, position, triggerInfo, cancellationToken);
+
+		return signatureHelpItems;
+
+		// var symbols = semanticModel.LookupSymbols(position, methodSymbol.ReceiverType, methodSymbol.Name, true)
+		// 	.OfType<IMethodSymbol>()
+		// 	.ToImmutableArray();
+		// return symbols;
 	}
 
 	// TODO: Pass in LinePositionSpan for refactorings that span multiple characters, e.g. extract method
