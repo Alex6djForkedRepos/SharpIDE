@@ -29,6 +29,7 @@ public partial class SharpIdeCodeEdit
                     {
                         var richTextLabel = _methodSignatureHelpWindow.GetNode<RichTextLabel>("PanelContainer/RichTextLabel");
                         richTextLabel.Clear();
+                        _methodSignatureHelpWindow.Size = new Vector2I(10, 10); // Used to shrink the window, as ChildControlsChanged() doesn't seem to handle shrinking in this case?
                         MethodSignatureHelpTooltip.WriteToMethodSignatureHelpLabel(richTextLabel, signatureHelpItems, _syntaxHighlighter.ColourSetForTheme);
                         _methodSignatureHelpWindow.Position = (Vector2I)GetGlobalPosition() + caretPos;
                         _methodSignatureHelpWindow.Show();

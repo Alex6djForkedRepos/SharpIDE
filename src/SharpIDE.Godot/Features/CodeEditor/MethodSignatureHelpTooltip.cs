@@ -51,9 +51,9 @@ public static class MethodSignatureHelpTooltip
 			{
 				CompletionDescriptionTooltip.WriteQuickInfoElement(richTextLabel, quickInfoElement, editorThemeColorSet);
 			}
-			richTextLabel.AppendText("\n");
 			if (i < signatureHelpItems.Items.Count - 1)
 			{
+				richTextLabel.AppendText("\n");
 				richTextLabel.AddHr(100, 1, HrColour, HorizontalAlignment.Center, true);
 				richTextLabel.AppendText("\n");
 			}
