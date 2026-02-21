@@ -20,6 +20,7 @@ public static class InputStringNames
     public static readonly StringName EditorFontSizeDecrease = nameof(EditorFontSizeDecrease);
     public static readonly StringName CodeEditorRequestCompletions = nameof(CodeEditorRequestCompletions);
     public static readonly StringName CodeEditorRequestSignatureInfo = nameof(CodeEditorRequestSignatureInfo);
+    public static readonly StringName CodeEditorRemoveLine = nameof(CodeEditorRemoveLine);
 }
 
 public static class ThemeStringNames
