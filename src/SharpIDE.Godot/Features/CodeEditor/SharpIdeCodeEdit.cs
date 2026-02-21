@@ -38,6 +38,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 	private CanvasItem _aboveCanvasItem = null!;
 	private Rid? _aboveCanvasItemRid = null!;
 	private Window _completionDescriptionWindow = null!;
+	private Window _methodSignatureHelpWindow = null!;
 	private RichTextLabel _completionDescriptionLabel = null!;
 
 	private ImmutableArray<SharpIdeDiagnostic> _fileDiagnostics = [];
@@ -71,6 +72,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		_aboveCanvasItem = GetNode<CanvasItem>("%AboveCanvasItem");
 		_aboveCanvasItemRid = _aboveCanvasItem.GetCanvasItem();
 		_completionDescriptionWindow = GetNode<Window>("%CompletionDescriptionWindow");
+		_methodSignatureHelpWindow = GetNode<Window>("%MethodSignatureHelpWindow");
 		_completionDescriptionLabel = _completionDescriptionWindow.GetNode<RichTextLabel>("PanelContainer/RichTextLabel");
 		RenderingServer.Singleton.CanvasItemSetParent(_aboveCanvasItemRid.Value, GetCanvasItem());
 		_popupMenu.IdPressed += OnCodeFixSelected;
@@ -403,6 +405,11 @@ public partial class SharpIdeCodeEdit : CodeEdit
 	public override void _GuiInput(InputEvent @event)
 	{
 		if (@event is InputEventMouseMotion) return;
+		if (MethodSignatureHelpPopupTryConsumeGuiInput(@event))
+		{
+			AcceptEvent();
+			return;
+		}
 		if (CompletionsPopupTryConsumeGuiInput(@event))
 		{
 			AcceptEvent();
