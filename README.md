@@ -30,7 +30,10 @@ if codesign is not installed, install it with `xcode-select --install`
 <img width="1638" height="935" alt="image" src="https://github.com/user-attachments/assets/bce91555-a1f2-43ab-a525-8353b4c7cff2" />
 
 ## Completions
-<img width="1638" height="848" alt="image" src="https://github.com/user-attachments/assets/2d6e694c-558b-4566-903e-dde38ab34b11" />
+<img width="1778" height="973" alt="image" src="https://github.com/user-attachments/assets/92e1c9aa-dad2-4a2f-9f5b-09d97d590a02" />
+
+## Signature Help
+<img width="1509" height="873" alt="image" src="https://github.com/user-attachments/assets/fcc95494-dcd1-4c4a-b566-3f9bda95b3a2" />
 
 ## Code Action/Refactoring
 <img width="1636" height="852" alt="image" src="https://github.com/user-attachments/assets/1448d630-ec5d-4a32-8827-bb78fd27872a" />
