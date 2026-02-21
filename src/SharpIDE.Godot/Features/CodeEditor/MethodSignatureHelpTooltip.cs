@@ -15,8 +15,6 @@ public static class MethodSignatureHelpTooltip
 		for (var i = 0; i < signatureHelpItems.Items.Count; i++)
 		{
 			var item = signatureHelpItems.Items[i];
-			var isCurrentItem = i == signatureHelpItems.SelectedItemIndex;
-			//if (isCurrentItem) richTextLabel.PushBold();
 			var prefixQuickInfoElements = item.PrefixDisplayParts.ToInteractiveTextElements(null);
 			foreach (var quickInfoElement in prefixQuickInfoElements)
 			{
@@ -30,8 +28,8 @@ public static class MethodSignatureHelpTooltip
 				var parameterQuickInfoElements = parameter.DisplayParts.ToImmutableArray().ToInteractiveTextElements(null);
 				foreach (var quickInfoElement in parameterQuickInfoElements)
 				{
-					var bold = j == signatureHelpItems.SemanticParameterIndex;
-					CompletionDescriptionTooltip.WriteQuickInfoElement(richTextLabel, quickInfoElement, editorThemeColorSet, bold);
+					var isCurrentParameter = j == signatureHelpItems.SemanticParameterIndex;
+					CompletionDescriptionTooltip.WriteQuickInfoElement(richTextLabel, quickInfoElement, editorThemeColorSet, isCurrentParameter);
 				}
 				if (j < parameters.Length - 1)
 				{
@@ -46,7 +44,6 @@ public static class MethodSignatureHelpTooltip
 			{
 				CompletionDescriptionTooltip.WriteQuickInfoElement(richTextLabel, quickInfoElement, editorThemeColorSet);
 			}
-			//if (isCurrentItem) richTextLabel.Pop();
 			richTextLabel.AppendText("\n");
 		}
 	}
