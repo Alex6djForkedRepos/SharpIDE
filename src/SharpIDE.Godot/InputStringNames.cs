@@ -5,6 +5,7 @@ namespace SharpIDE.Godot;
 public static class InputStringNames
 {
     public static readonly StringName Backspace = "ui_text_backspace";
+    public static readonly StringName Cancel = "ui_cancel";
     public static readonly StringName RenameSymbol = nameof(RenameSymbol);
     public static readonly StringName CodeFixes = nameof(CodeFixes);
     public static readonly StringName StepOver = nameof(StepOver);
