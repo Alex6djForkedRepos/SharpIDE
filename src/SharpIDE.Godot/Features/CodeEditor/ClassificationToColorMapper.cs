@@ -57,8 +57,9 @@ public static class ClassificationToColorMapper
             "xml doc comment - delimiter" => editorThemeColorSet.CommentGreen,
             "xml doc comment - name" => editorThemeColorSet.White,
             "xml doc comment - text" => editorThemeColorSet.CommentGreen,
-            "xml doc comment - attribute name" => editorThemeColorSet.LightOrangeBrown,
+            "xml doc comment - attribute name" => editorThemeColorSet.Gray,
             "xml doc comment - attribute quotes" => editorThemeColorSet.LightOrangeBrown,
+            "xml doc comment - attribute value" => editorThemeColorSet.LightOrangeBrown,
 
             // Misc
             "excluded code" => editorThemeColorSet.Gray,
