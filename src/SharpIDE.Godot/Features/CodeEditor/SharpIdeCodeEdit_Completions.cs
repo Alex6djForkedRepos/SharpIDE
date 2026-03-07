@@ -115,7 +115,7 @@ public partial class SharpIdeCodeEdit
         if (_codeCompletionOptions.IsDefaultOrEmpty is false)
         {
 	        var currentSelectedCompletion = _codeCompletionOptions[_codeCompletionCurrentSelected];
-	        var selectedCompletionInFilteredCompletions = filteredCompletions.Cast<SharpIdeCompletionItem?>().SingleOrDefault(s => s.Value.CompletionItem == currentSelectedCompletion.CompletionItem);
+	        var selectedCompletionInFilteredCompletions = filteredCompletions.Cast<SharpIdeCompletionItem?>().SingleOrDefault(s => s!.Value.CompletionItem == currentSelectedCompletion.CompletionItem);
 	        if (selectedCompletionInFilteredCompletions is not null)
 	        {
 		        newSelectedIndex = filteredCompletions.IndexOf(selectedCompletionInFilteredCompletions.Value);
