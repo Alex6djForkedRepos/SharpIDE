@@ -450,6 +450,11 @@ public partial class SharpIdeCodeEdit : CodeEdit
 				}
 			}
 		}
+		if (@event.IsActionPressed(InputStringNames.CodeEditorDuplicateLine))
+		{
+			DuplicateSelection();
+			return;
+		}
 		if (MethodSignatureHelpPopupTryConsumeGuiInput(@event))
 		{
 			AcceptEvent();
