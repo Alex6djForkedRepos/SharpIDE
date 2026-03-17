@@ -95,7 +95,6 @@ public partial class SharpIdeCodeEdit : CodeEdit
 		LinesEditedFrom += OnLinesEditedFrom;
 		GlobalEvents.Instance.SolutionAltered.Subscribe(OnSolutionAltered);
 		GodotGlobalEvents.Instance.TextEditorThemeChanged.Subscribe(UpdateEditorThemeAsync);
-		SetCodeRegionTags("#region", "#endregion");
 		//AddGitGutter();
 		var hScrollBar = GetHScrollBar();
 		var vScrollBar = GetVScrollBar();
