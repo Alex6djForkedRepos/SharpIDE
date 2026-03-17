@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using Godot;
+using SharpIDE.Application.Features.Analysis;
 using SharpIDE.Application.Features.SolutionDiscovery.VsPersistence;
 
 namespace SharpIDE.Godot;
@@ -122,23 +123,34 @@ public static class NodeExtensions
         }
     }
 
+    extension<TKey, TValue>(ConditionalWeakTable<TKey, TValue> conditionalWeakTable) where TKey : class where TValue : class
+    {
+        public void AddOrUpdateOrRemove(TKey key, TValue? value)
+        {
+            if (value is null)
+            {
+                conditionalWeakTable.Remove(key);
+            }
+            else
+            {
+                conditionalWeakTable.AddOrUpdate(key, value);
+            }
+        }
+    }
+
     private static readonly ConditionalWeakTable<TreeItem, ISharpIdeNode> TreeItemSharpIdeNode = [];
+    private static readonly ConditionalWeakTable<TreeItem, SharpIdeDiagnostic> TreeItemSharpIdeDiagnostic = [];
     extension(TreeItem treeItem)
     {
         public ISharpIdeNode? SharpIdeNode
         {
             get => TreeItemSharpIdeNode.TryGetValue(treeItem, out var s) ? s : null;
-            set
-            {
-                if (value is null)
-                {
-                    TreeItemSharpIdeNode.Remove(treeItem);
-                }
-                else
-                {
-                    TreeItemSharpIdeNode.AddOrUpdate(treeItem, value);
-                }
-            }
+            set => TreeItemSharpIdeNode.AddOrUpdateOrRemove(treeItem, value);
+        }
+        public SharpIdeDiagnostic? SharpIdeDiagnostic
+        {
+            get => TreeItemSharpIdeDiagnostic.TryGetValue(treeItem, out var s) ? s : null;
+            set => TreeItemSharpIdeDiagnostic.AddOrUpdateOrRemove(treeItem, value);
         }
         public void MoveToIndexInParent(int currentIndex, int newIndex)
         {
