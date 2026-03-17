@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using Ardalis.GuardClauses;
 using Godot;
 using R3;
@@ -32,6 +33,7 @@ public partial class CodeEditorPanel : MarginContainer
 		var tabBar = _tabContainer.GetTabBar();
 		tabBar.TabCloseDisplayPolicy = TabBar.CloseButtonDisplayPolicy.ShowAlways;
 		tabBar.TabClosePressed += OnTabClosePressed;
+		tabBar.TabRmbClicked += OnTabRmbClicked;
 		GlobalEvents.Instance.DebuggerExecutionStopped.Subscribe(OnDebuggerExecutionStopped);
 		GlobalEvents.Instance.ProjectStoppedDebugging.Subscribe(OnProjectStoppedDebugging);
 	}
@@ -115,17 +117,42 @@ public partial class CodeEditorPanel : MarginContainer
 
 	private void OnTabClosePressed(long tabIndex)
 	{
-		var tab = _tabContainer.GetChild<Control>((int)tabIndex);
-		var previousSibling = _tabContainer.GetChildOrNull<SharpIdeCodeEditContainer>((int)tabIndex - 1)?.CodeEdit;
-		if (previousSibling is not null)
+		var tab = (SharpIdeCodeEditContainer)_tabContainer.GetTabControl((int)tabIndex);
+		CloseTabs([tab]);
+	}
+
+	private void OnTabRmbClicked(long tabIndex)
+	{
+		OpenContextMenuTab(tabIndex);
+	}
+
+	private void CloseTabs(List<SharpIdeCodeEditContainer> tabsToClose)
+	{
+		var allTabs = _tabContainer.GetChildren().OfType<SharpIdeCodeEditContainer>().ToList();
+		var currentTab = (SharpIdeCodeEditContainer?)_tabContainer.GetCurrentTabControl();
+		var closingCurrentTab = currentTab is not null && tabsToClose.Contains(currentTab);
+		if (closingCurrentTab) RecordNavigationToNextSelectedTab(allTabs, tabsToClose, currentTab!);
+		
+		foreach (var tab in tabsToClose) _tabContainer.RemoveChildAndQueueFree(tab);
+	}
+
+	private void RecordNavigationToNextSelectedTab(List<SharpIdeCodeEditContainer> allTabs, List<SharpIdeCodeEditContainer> tabsToClose, SharpIdeCodeEditContainer currentTabToBeClosed)
+	{
+		var remainingTabsIncludingCurrentTab = allTabs.Except(tabsToClose.Except([currentTabToBeClosed])).ToList();
+		Guard.Against.Zero(remainingTabsIncludingCurrentTab.Count);
+		if (remainingTabsIncludingCurrentTab.Count is 1) return; // once the current tab is removed, there will be no tabs remaining. No navigation to do.
+		if (remainingTabsIncludingCurrentTab.Count > 1)
 		{
-			var sharpIdeFile = previousSibling.SharpIdeFile;
-			var caretLinePosition = new SharpIdeFileLinePosition(previousSibling.GetCaretLine(), previousSibling.GetCaretColumn());
+			var currentTabIndexInTempList = remainingTabsIncludingCurrentTab.IndexOf(currentTabToBeClosed);
+			if (currentTabIndexInTempList is -1) throw new UnreachableException("Current tab to be closed should be in the list of remaining tabs including current tab");
+			var tabToBeSelected = currentTabIndexInTempList is 0 ? remainingTabsIncludingCurrentTab[1] : remainingTabsIncludingCurrentTab[currentTabIndexInTempList - 1];
+			
+			var tabToBeSelectedCodeEdit = tabToBeSelected.CodeEdit;
+			var sharpIdeFile = tabToBeSelectedCodeEdit.SharpIdeFile;
+			var caretLinePosition = new SharpIdeFileLinePosition(tabToBeSelectedCodeEdit.GetCaretLine(), tabToBeSelectedCodeEdit.GetCaretColumn());
 			// This isn't actually necessary - closing a tab automatically selects the previous tab, however we need to do it to select the file in sln explorer, record navigation event etc
 			GodotGlobalEvents.Instance.FileExternallySelected.InvokeParallelFireAndForget(sharpIdeFile, caretLinePosition);
 		}
-		_tabContainer.RemoveChild(tab);
-		tab.QueueFree();
 	}
 
 	public async Task SetSharpIdeFile(SharpIdeFile file, SharpIdeFileLinePosition? fileLinePosition)
@@ -152,20 +179,37 @@ public partial class CodeEditorPanel : MarginContainer
 			_tabContainer.SetTabTitle(newTabIndex, file.Name.Value);
 			_tabContainer.SetTabTooltip(newTabIndex, file.Path);
 			_tabContainer.CurrentTab = newTabIndex;
-			
-			file.IsDirty.Skip(1).SubscribeOnThreadPool().ObserveOnThreadPool().SubscribeAwait(async (isDirty, ct) =>
+
+			file.FileDeleted.Subscribe(async () =>
 			{
-				//GD.Print($"File dirty state changed: {file.Path} is now {(isDirty ? "dirty" : "clean")}");
 				await this.InvokeAsync(() =>
 				{
-					var tabIndex = newTab.GetIndex();
-					var title = file.Name.Value + (isDirty ? " (*)" : "");
-					_tabContainer.SetTabTitle(tabIndex, title);
+					CloseTabs([newTab]);
 				});
-			}).AddTo(newTab); // needs to be on ui thread
+			});
+			
+			var nameChanged = file.Name.Skip(1).Select(name => (name, file.IsDirty.Value));
+			var dirtyChanged = file.IsDirty.Skip(1).Select(isDirty => (file.Name.Value, isDirty));
+
+			nameChanged.Merge(dirtyChanged).SubscribeOnThreadPool().ObserveOnThreadPool()
+				.SubscribeAwait(async (x, ct) =>
+				{
+					var (name, isDirty) = x;
+					await UpdateTabFileName(newTab.GetIndex(), name, isDirty);
+				})
+				.AddTo(newTab); // needs to be on ui thread
 		});
 		
 		await newTab.CodeEdit.SetSharpIdeFile(file, fileLinePosition);
+	}
+
+	private async Task UpdateTabFileName(int tabIndex, string name, bool isDirty)
+	{
+		await this.InvokeAsync(() =>
+		{
+			var title = name + (isDirty ? " (*)" : "");
+			_tabContainer.SetTabTitle(tabIndex, title);
+		});
 	}
 	
 	private static readonly Color ExecutingLineColor = new Color("665001");
