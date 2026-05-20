@@ -192,7 +192,7 @@ public partial class CustomMsBuildProjectLoader
 			// Next, iterate through all project references in the file and create project references.
 			foreach (var projectFileReference in projectFileInfo.ProjectReferences)
 			{
-				var aliases = projectFileReference.Aliases;
+				var aliases = projectFileReference.Aliases.ToImmutableArray();
 
 				if (_pathResolver.TryGetAbsoluteProjectPath(projectFileReference.Path, baseDirectory: projectDirectory, _discoveredProjectOptions.OnPathFailure, out var projectReferencePath))
 				{
