@@ -29,11 +29,12 @@ public partial class SolutionExplorerPanel : MarginContainer
 	public Texture2D UnloadedProjectIcon { get; set; } = null!;
 	[Export]
 	public Texture2D SlnIcon { get; set; } = null!;
-	
-	public SharpIdeSolutionModel SolutionModel { get; set; } = null!;
+
 	private PanelContainer _panelContainer = null!;
 	private Tree _tree = null!;
 	private TreeItem _rootItem = null!;
+
+	[Inject] SharpIdeSolutionAccessor _sharpIdeSolutionAccessor = null!;
 
 	private enum ClipboardOperation { Cut, Copy }
 
@@ -46,6 +47,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 		// Remove the tree from the scene tree for now, we will add it back when we bind to a solution
 		_panelContainer.RemoveChild(_tree);
 		GodotGlobalEvents.Instance.FileExternallySelected.Subscribe(OnFileExternallySelected);
+		_ = Task.GodotRun(BindToSolution);
 	}
 
 	public override void _UnhandledKeyInput(InputEvent @event)
@@ -80,7 +82,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 		var selected = _tree.GetSelected();
 		if (selected is null) return;
 		if (HasMultipleNodesSelected()) return;
-		
+
 		var mouseButtonMask = (MouseButtonMask)mouseButtonIndex;
 
 		var sharpIdeNode = selected.SharpIdeNode;
@@ -101,7 +103,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 			default: break;
 		}
 	}
-	
+
 	private async Task OnFileExternallySelected(SharpIdeFile file, SharpIdeFileLinePosition? fileLinePosition)
 	{
 		await Task.CompletedTask.ConfigureAwait(ConfigureAwaitOptions.ForceYielding);
@@ -132,7 +134,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 		}
 		await task.ConfigureAwait(false);
 	}
-	
+
 	private static TreeItem? FindItemRecursive(TreeItem item, SharpIdeFile file)
 	{
 		if (item.SharpIdeNode == file)
@@ -151,13 +153,13 @@ public partial class SolutionExplorerPanel : MarginContainer
 		return null;
 	}
 
-	public async Task BindToSolution() => await BindToSolution(SolutionModel);
-	[RequiresGodotUiThread]
-	public async Task BindToSolution(SharpIdeSolutionModel solution)
+	public async Task BindToSolution()
 	{
-		await Task.CompletedTask.ConfigureAwait(ConfigureAwaitOptions.ForceYielding);
 		using var _ = SharpIdeOtel.Source.StartActivity($"{nameof(SolutionExplorerPanel)}.{nameof(BindToSolution)}");
-		
+
+		await _sharpIdeSolutionAccessor.SolutionReadyTcs.Task;
+		var solution = _sharpIdeSolutionAccessor.SolutionModel;
+
 		// Solutions with hundreds of thousands of files can cause the ui to freeze as the tree is populated
 		// the Tree has been removed from the scene tree in _Ready, so we can operate on it off the ui thread, then add it back
 		_tree.Clear();
@@ -168,7 +170,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 	    rootItem.SetIcon(0, SlnIcon);
 	    rootItem.SharpIdeNode = solution;
 	    _rootItem = rootItem;
-	    
+
 	    var disposableBuilder = new DisposableBuilder();
 
 	    // Observe Projects
@@ -192,7 +194,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 	            NotifyCollectionChangedAction.Remove => FreeTreeItem(e.OldItem.View.Value),
 	            _ => Task.CompletedTask
 	        }), configureAwait: false).AddTo(ref disposableBuilder);
-	    
+
 	    rootItem.SetCollapsedRecursive(true);
 	    rootItem.Collapsed = false;
 	    rootItem.SharpIdeDisposable = disposableBuilder.Build();
@@ -209,13 +211,13 @@ public partial class SolutionExplorerPanel : MarginContainer
         folderItem.SetText(0, slnFolder.Name);
         folderItem.SetIcon(0, SlnFolderIcon);
         folderItem.SharpIdeNode = slnFolder;
-        
+
         var disposableBuilder = new DisposableBuilder();
 
         // Observe folder sub-collections
         var subFoldersView = slnFolder.Folders.CreateView(y => new TreeItemContainer());
         subFoldersView.Unfiltered.ToList().ForEach(s => s.View.Value = CreateSlnFolderTreeItem(_tree, folderItem, s.Value));
-        
+
         subFoldersView.ObserveChanged().SubscribeOnThreadPool().ObserveOnThreadPool()
             .SubscribeAwait(async (innerEvent, ct) => await (innerEvent.Action switch
             {
@@ -270,9 +272,9 @@ public partial class SolutionExplorerPanel : MarginContainer
 		projectItem.SetIcon(0, icon);
 		if (projectModel.IsLoading is false && projectModel.IsInvalid) projectItem.SetSuffix(0, " ·  load failed");
 		projectItem.SharpIdeNode = projectModel;
-		
+
         var disposableBuilder = new DisposableBuilder();
-		
+
 		projectModel.MsBuildProjectLoadState.SubscribeOnThreadPool().ObserveOnThreadPool().SubscribeAwait(async (loadState, ct) =>
 		{
 			var newIcon = loadState switch
@@ -299,7 +301,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 		{
 			var foldersView = projectFolder.Folders.CreateView(y => new TreeItemContainer());
 			foldersView.Unfiltered.ToList().ForEach(s => s.View.Value = CreateFolderTreeItem(_tree, projectItem, s.Value));
-		
+
 			foldersView.ObserveChanged().SubscribeOnThreadPool().ObserveOnThreadPool()
 				.SubscribeAwait(async (innerEvent, ct) => await (innerEvent.Action switch
 				{
@@ -308,7 +310,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 					NotifyCollectionChangedAction.Remove => FreeTreeItem(innerEvent.OldItem.View.Value),
 					_ => Task.CompletedTask
 				}), configureAwait: false).AddTo(ref disposableBuilder);
-		
+
 			var filesView = projectFolder.Files.CreateView(y => new TreeItemContainer());
 			filesView.Unfiltered.ToList().ForEach(s => s.View.Value = CreateFileTreeItem(_tree, projectItem, s.Value));
 			filesView.ObserveChanged().SubscribeOnThreadPool().ObserveOnThreadPool()
@@ -320,7 +322,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 					_ => Task.CompletedTask
 				}), configureAwait: false).AddTo(ref disposableBuilder);
 		}
-		
+
 		projectItem.SharpIdeDisposable = disposableBuilder.Build();
 		return projectItem;
 	}
@@ -338,11 +340,11 @@ public partial class SolutionExplorerPanel : MarginContainer
 			{
 				await this.InvokeAsync(() => folderItem.SetText(0, s));
 			}, configureAwait: false).AddTo(ref disposableBuilder);
-		
+
 		// Observe subfolders
 		var subFoldersView = sharpIdeFolder.Folders.CreateView(y => new TreeItemContainer());
 		subFoldersView.Unfiltered.ToList().ForEach(s => s.View.Value = CreateFolderTreeItem(_tree, folderItem, s.Value));
-		
+
 		subFoldersView.ObserveChanged().SubscribeOnThreadPool().ObserveOnThreadPool()
 			.SubscribeAwait(async (innerEvent, ct) => await (innerEvent.Action switch
 			{
@@ -393,9 +395,9 @@ public partial class SolutionExplorerPanel : MarginContainer
 			fileItem.SetWarningIcon();
 			fileItem.ClearCustomColor(0);
 		}
-		
+
 		fileItem.SharpIdeNode = sharpIdeSolutionFile;
-		
+
 		return fileItem;
 	}
 
@@ -412,14 +414,14 @@ public partial class SolutionExplorerPanel : MarginContainer
 			newStartingIndex += folderCount;
 		}
 		var disposableBuilder = Disposable.CreateBuilder();
-		
+
 		var fileItem = tree.CreateItem(parent, newStartingIndex);
 		fileItem.SetText(0, sharpIdeFile.Name.Value);
 		fileItem.SetIconsForFileExtension(sharpIdeFile);
 		if (GitColours.GetColorForGitFileStatus(sharpIdeFile.GitStatus) is { } notnullColor) fileItem.SetCustomColor(0, notnullColor);
 		else fileItem.ClearCustomColor(0);
 		fileItem.SharpIdeNode = sharpIdeFile;
-		
+
 		sharpIdeFile.Name.Skip(1).SubscribeOnThreadPool().ObserveOnThreadPool()
 			.SubscribeAwait(async (newName, ct) => await this.InvokeAsync(() =>
 			{
@@ -430,7 +432,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 		fileItem.SharpIdeDisposable = disposableBuilder.Build();
 		return fileItem;
 	}
-	
+
 	private async Task MoveTreeItem(Tree tree, TreeItemContainer treeItemContainer, IFileOrFolder fileOrFolder, int oldStartingIndex, int newStartingIndex)
 	{
 		if (oldStartingIndex == newStartingIndex) throw new InvalidOperationException("Old and new starting indexes are the same");
@@ -443,7 +445,7 @@ public partial class SolutionExplorerPanel : MarginContainer
 			var folderCount = sharpIdeParent.Folders.Count;
 			newStartingIndex += folderCount;
 		}
-		
+
 		await this.InvokeAsync(() =>
 		{
 			treeItem.MoveToIndexInParent(oldStartingIndex, newStartingIndex);

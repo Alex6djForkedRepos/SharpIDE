@@ -32,13 +32,10 @@ public partial class IdeRoot : Control
 	private SearchWindow _searchWindow = null!;
 	private SearchAllFilesWindow _searchAllFilesWindow = null!;
 	private CodeEditorPanel _codeEditorPanel = null!;
-	private SolutionExplorerPanel _solutionExplorerPanel = null!;
 	private InvertedVSplitContainer _invertedVSplitContainer = null!;
 	private RunPanel _runPanel = null!;
 	private Button _runMenuButton = null!;
 	private Popup _runMenuPopup = null!;
-	private BottomPanelManager _bottomPanelManager = null!;
-	
 	private readonly PackedScene _runMenuItemScene = ResourceLoader.Load<PackedScene>("res://Features/Run/RunMenuItem.tscn");
 	private TaskCompletionSource _nodeReadyTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -79,11 +76,8 @@ public partial class IdeRoot : Control
 		_codeEditorPanel = GetNode<CodeEditorPanel>("%CodeEditorPanel");
 		_searchWindow = GetNode<SearchWindow>("%SearchWindow");
 		_searchAllFilesWindow = GetNode<SearchAllFilesWindow>("%SearchAllFilesWindow");
-		_solutionExplorerPanel = GetNode<SolutionExplorerPanel>("%SolutionExplorerPanel");
 		_runPanel = GetNode<RunPanel>("%RunPanel");
 		_invertedVSplitContainer = GetNode<InvertedVSplitContainer>("%InvertedVSplitContainer");
-		_bottomPanelManager = GetNode<BottomPanelManager>("%BottomPanel");
-		
 		_runMenuButton.Pressed += OnRunMenuButtonPressed;
 		GodotGlobalEvents.Instance.FileSelected.Subscribe(OnSolutionExplorerPanelOnFileSelected);
 		_openSlnButton.Pressed += () => IdeWindow.PickSolution();
@@ -114,7 +108,7 @@ public partial class IdeRoot : Control
 		});
 	}
 
-	// TODO: Problematic, as this is called even when the focus shifts to an embedded subwindow, such as a popup 
+	// TODO: Problematic, as this is called even when the focus shifts to an embedded subwindow, such as a popup
 	private void OnFocusExited()
 	{
 		if (Debugger.IsAttached is false)
@@ -138,7 +132,7 @@ public partial class IdeRoot : Control
 	private async void MsBuild(BuildType buildType)
 	{
 		await Task.CompletedTask.ConfigureAwait(ConfigureAwaitOptions.ForceYielding);
-		await _buildService.MsBuildAsync(_solutionExplorerPanel.SolutionModel.FilePath, buildType);
+		await _buildService.MsBuildAsync(_sharpIdeSolutionAccessor.SolutionModel.FilePath, buildType);
 	}
 
 	private async Task OnSolutionExplorerPanelOnFileSelected(SharpIdeFile file, SharpIdeFileLinePosition? fileLinePosition)
@@ -162,17 +156,15 @@ public partial class IdeRoot : Control
 			await _sharpIdeSolutionService.LoadSolution(solutionModel, path, vsSln, solutionSerializer);
 			_sharpIdeSolutionAccessor.SolutionModel = solutionModel;
 			_sharpIdeSolutionAccessor.SolutionReadyTcs.SetResult();
-			_solutionExplorerPanel.SolutionModel = solutionModel;
 			_codeEditorPanel.Solution = solutionModel;
 			_searchWindow.Solution = solutionModel;
 			_searchAllFilesWindow.Solution = solutionModel;
 			_fileExternalChangeHandler.SolutionModel = solutionModel;
 			_fileChangedService.SolutionModel = solutionModel;
 			_rootFolderModificationService.RootFolder = sharpIdeRootFolder;
-			_ = Task.GodotRun(_solutionExplorerPanel.BindToSolution);
 			_roslynAnalysis.StartLoadingSolutionInWorkspace(solutionModel);
 			_fileWatcher.StartWatching(solutionModel);
-			
+
 			var previousTabs = Singletons.AppState.RecentSlns.Single(s => s.FilePath == solutionModel.FilePath).IdeSolutionState.OpenTabs;
 			var filesToOpen = previousTabs
 				.Select(s => (solutionModel.AllFiles.GetValueOrDefault(s.FilePath), new SharpIdeFileLinePosition(s.CaretLine, s.CaretColumn), s.IsSelected))
@@ -215,7 +207,7 @@ public partial class IdeRoot : Control
 			});
 		});
 	}
-	
+
 	public override void _UnhandledKeyInput(InputEvent @event)
 	{
 		if (@event.IsActionPressed(InputStringNames.FindInFiles))
@@ -226,7 +218,7 @@ public partial class IdeRoot : Control
 			{
 				_searchWindow.SetSearchText(currentCodeEdit.GetSelectedText());
 			}
-			
+
 			_searchWindow.Popup();
 		}
 		else if (@event.IsActionPressed(InputStringNames.FindFiles))
