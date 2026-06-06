@@ -1,12 +1,14 @@
 namespace SharpIDE.Godot.Features.BottomPanel;
 
-public enum BottomPanelType
+public enum ToolPaneType
 {
+	Unknown,
     Run,
     Debug,
     Build,
     Problems,
     IdeDiagnostics,
     Nuget,
-    TestExplorer
+    TestExplorer,
+    SlnExplorer
 }

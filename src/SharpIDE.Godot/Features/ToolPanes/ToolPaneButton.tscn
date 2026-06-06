@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://tag6haeskfi5"]
+
+[ext_resource type="Script" uid="uid://bvkq0ae75jcif" path="res://Features/ToolPanes/ToolPaneButton.cs" id="1_icgat"]
+
+[node name="ToolPaneButton" type="Button" unique_id=1617682628]
+custom_minimum_size = Vector2(0, 50)
+theme_type_variation = &"IdeSidebarButton"
+theme_override_font_sizes/font_size = 13
+toggle_mode = true
+button_pressed = true
+text = "Replace"
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
+script = ExtResource("1_icgat")

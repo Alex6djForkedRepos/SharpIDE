@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ToolPaneResource" format=3 uid="uid://bqtomxt8uavs2"]
+
+[ext_resource type="Script" uid="uid://bhoa85trep7li" path="res://Features/ToolPanes/ToolPaneResource.cs" id="1_8tv24"]
+[ext_resource type="PackedScene" uid="uid://dkjips8oudqou" path="res://Features/Debug_/DebugPanel.tscn" id="1_23x56"]
+[ext_resource type="Texture2D" uid="uid://butisxqww0boc" path="res://Features/LeftSideBar/Resources/SidebarDebug.svg" id="1_qnce7"]
+
+[resource]
+script = ExtResource("1_8tv24")
+Pane = ExtResource("1_23x56")
+ButtonIcon = ExtResource("1_qnce7")
+ButtonLabel = "Debug"
+ToolPaneType = 2
+metadata/_custom_type_script = "uid://bhoa85trep7li"

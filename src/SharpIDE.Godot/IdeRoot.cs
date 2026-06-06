@@ -33,7 +33,6 @@ public partial class IdeRoot : Control
 	private SearchAllFilesWindow _searchAllFilesWindow = null!;
 	private CodeEditorPanel _codeEditorPanel = null!;
 	private InvertedVSplitContainer _invertedVSplitContainer = null!;
-	private RunPanel _runPanel = null!;
 	private Button _runMenuButton = null!;
 	private Popup _runMenuPopup = null!;
 	private readonly PackedScene _runMenuItemScene = ResourceLoader.Load<PackedScene>("res://Features/Run/RunMenuItem.tscn");
@@ -76,7 +75,6 @@ public partial class IdeRoot : Control
 		_codeEditorPanel = GetNode<CodeEditorPanel>("%CodeEditorPanel");
 		_searchWindow = GetNode<SearchWindow>("%SearchWindow");
 		_searchAllFilesWindow = GetNode<SearchAllFilesWindow>("%SearchAllFilesWindow");
-		_runPanel = GetNode<RunPanel>("%RunPanel");
 		_invertedVSplitContainer = GetNode<InvertedVSplitContainer>("%InvertedVSplitContainer");
 		_runMenuButton.Pressed += OnRunMenuButtonPressed;
 		GodotGlobalEvents.Instance.FileSelected.Subscribe(OnSolutionExplorerPanelOnFileSelected);
@@ -88,7 +86,6 @@ public partial class IdeRoot : Control
 		_cancelMsBuildActionButton.Pressed += async () => await _buildService.CancelBuildAsync();
 		_buildService.BuildStarted.Subscribe(OnBuildStarted);
 		_buildService.BuildFinished.Subscribe(OnBuildFinished);
-		GodotGlobalEvents.Instance.BottomPanelVisibilityChangeRequested.Subscribe(async show => await this.InvokeAsync(() => _invertedVSplitContainer.InvertedSetCollapsed(!show)));
 		GetTree().GetRoot().FocusExited += OnFocusExited;
 		_nodeReadyTcs.SetResult();
 	}
@@ -97,7 +94,7 @@ public partial class IdeRoot : Control
 	private async Task OnBuildFinished() => await OnBuildRunningStateChanged(false);
 	private async Task OnBuildRunningStateChanged(bool running, BuildStartedFlags? flags = null)
 	{
-		if (running && flags is BuildStartedFlags.UserFacing) GodotGlobalEvents.Instance.BottomPanelTabExternallySelected.InvokeParallelFireAndForget(BottomPanelType.Build);
+		if (running && flags is BuildStartedFlags.UserFacing) GodotGlobalEvents.Instance.ToolPaneExternallyActivated.InvokeParallelFireAndForget(ToolPaneType.Build);
 		await this.InvokeAsync(() =>
 		{
 			_cancelMsBuildActionButton.Disabled = !running;

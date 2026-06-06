@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://c3ow337fhh1v1"]
+
+[ext_resource type="Script" uid="uid://bachjxu0e2lly" path="res://Features/ToolPanes/ToolPaneContainer.cs" id="1_u3btp"]
+
+[node name="ToolPaneContainer" type="PanelContainer" unique_id=1097533424]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_u3btp")

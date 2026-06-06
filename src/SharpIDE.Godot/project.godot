@@ -39,6 +39,11 @@ project/solution_directory="../../"
 
 enabled=PackedStringArray("res://addons/csharp_gdextension_bindgen/plugin.cfg")
 
+[global_group]
+
+ToolPaneButtonContainers=""
+ToolPaneContainers=""
+
 [gui]
 
 common/show_focus_state_on_pointer_event=0
