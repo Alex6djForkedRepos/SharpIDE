@@ -59,6 +59,10 @@ public partial class SolutionExplorerPanel : MarginContainer
 			{
 				OpenRenameFilePopup(file);
 			}
+			else if (selectedTreeItem.SharpIdeNode is SharpIdeFolder folder)
+			{
+				OpenRenameFolderPopup(folder);
+			}
 		}
 	}
 

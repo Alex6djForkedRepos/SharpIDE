@@ -22,7 +22,7 @@ file enum CreateNewSubmenuOptions
 public partial class SolutionExplorerPanel
 {
     [Inject] private readonly IdeFileOperationsService _ideFileOperationsService = null!;
-    
+
     private readonly PackedScene _newDirectoryDialogScene = GD.Load<PackedScene>("uid://bgi4u18y8pt4x");
     private readonly PackedScene _newCsharpFileDialogScene = GD.Load<PackedScene>("uid://chnb7gmcdg0ww");
     private readonly PackedScene _renameDirectoryDialogScene = GD.Load<PackedScene>("uid://btebkg8bo3b37");
@@ -30,13 +30,13 @@ public partial class SolutionExplorerPanel
     {
         var menu = new PopupMenu();
         AddChild(menu);
-        
+
         var createNewSubmenu = new PopupMenu();
         menu.AddSubmenuNodeItem("Add", createNewSubmenu, (int)FolderContextMenuOptions.CreateNew);
         createNewSubmenu.AddItem("Directory", (int)CreateNewSubmenuOptions.Directory);
         createNewSubmenu.AddItem("C# File", (int)CreateNewSubmenuOptions.CSharpFile);
         createNewSubmenu.IdPressed += id => OnCreateNewSubmenuPressed(id, folder);
-        
+
         menu.AddItem("Reveal in File Explorer", (int)FolderContextMenuOptions.RevealInFileExplorer);
         menu.AddItem("Delete", (int)FolderContextMenuOptions.Delete);
         menu.AddItem("Rename", (int)FolderContextMenuOptions.Rename);
@@ -75,13 +75,10 @@ public partial class SolutionExplorerPanel
             }
             else if (actionId is FolderContextMenuOptions.Rename)
             {
-                var renameDirectoryDialog = _renameDirectoryDialogScene.Instantiate<RenameDirectoryDialog>();
-                renameDirectoryDialog.Folder = folder;
-                AddChild(renameDirectoryDialog);
-                renameDirectoryDialog.PopupCentered();
+	            OpenRenameFolderPopup(folder);
             }
         };
-			
+
         var globalMousePosition = GetGlobalMousePosition();
         menu.Position = new Vector2I((int)globalMousePosition.X, (int)globalMousePosition.Y);
         menu.Popup();
@@ -104,5 +101,13 @@ public partial class SolutionExplorerPanel
             AddChild(newCsharpFileDialog);
             newCsharpFileDialog.PopupCentered();
         }
+    }
+
+    private void OpenRenameFolderPopup(SharpIdeFolder folder)
+    {
+	    var renameDirectoryDialog = _renameDirectoryDialogScene.Instantiate<RenameDirectoryDialog>();
+	    renameDirectoryDialog.Folder = folder;
+	    AddChild(renameDirectoryDialog);
+	    renameDirectoryDialog.PopupCentered();
     }
 }
