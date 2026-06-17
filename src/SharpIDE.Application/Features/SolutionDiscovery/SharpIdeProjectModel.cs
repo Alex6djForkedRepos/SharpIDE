@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.IO.Pipelines;
 using System.Threading.Channels;
 using Ardalis.GuardClauses;
 using Microsoft.Build.Evaluation;
@@ -72,11 +73,20 @@ public class SharpIdeProjectModel : ISharpIdeNode, IExpandableSharpIdeNode, IChi
 	public bool IsMtpTestProject => MsBuildEvaluationProject.GetPropertyValue("IsTestingPlatformApplication") is "true";
 	public string BlazorDevServerVersion => MsBuildEvaluationProject.Items.Single(s => s.ItemType is "PackageReference" && s.EvaluatedInclude is "Microsoft.AspNetCore.Components.WebAssembly.DevServer").GetMetadataValue("Version");
 	public bool OpenInRunPanel { get; set; }
-	public Channel<byte[]>? RunningOutputChannel { get; set; }
+	public StandardIo? ProcessStandardIo { get; set; }
 
 	public EventWrapper<Task> ProjectRunFailed { get; } = new(() => Task.CompletedTask);
 	public EventWrapper<Task> ProjectStartedRunning { get; } = new(() => Task.CompletedTask);
 	public EventWrapper<Task> ProjectStoppedRunning { get; } = new(() => Task.CompletedTask);
 
 	public ObservableHashSet<SharpIdeDiagnostic> Diagnostics { get; internal set; } = [];
+}
+
+public class StandardIo(PipeReader outputReader, PipeWriter stdinWriter)
+{
+	public PipeReader OutputReader { get; } = outputReader;
+	public PipeWriter StdinWriter { get; } = stdinWriter;
+
+	public TaskCompletionSource OutputReadComplete { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+	public TaskCompletionSource StdinWriteComplete { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 }

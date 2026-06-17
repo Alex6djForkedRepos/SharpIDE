@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Godot;
 using SharpIDE.Application.Features.SolutionDiscovery;
 using SharpIDE.Godot.Features.TerminalBase;
@@ -8,7 +9,7 @@ public partial class RunPanelTab : Control
 {
 	private SharpIdeTerminal _terminal = null!;
 	private Task _writeTask = Task.CompletedTask;
-    
+
     public SharpIdeProjectModel Project { get; set; } = null!;
     public int TabBarTab { get; set; }
 
@@ -16,23 +17,36 @@ public partial class RunPanelTab : Control
     {
 	    _terminal = GetNode<SharpIdeTerminal>("SharpIdeTerminal");
     }
-    
+
     public void StartWritingFromProjectOutput()
-	{
-		if (_writeTask.IsCompleted is not true)
-		{
-			GD.PrintErr("Attempted to start writing from project output, but a write task is already running.");
-			return;
-		}
-		_writeTask = Task.GodotRun(async () =>
-		{
-			await foreach (var array in Project.RunningOutputChannel!.Reader.ReadAllAsync().ConfigureAwait(false))
-			{
-				_terminal.Write(array.AsSpan());
-			}
-		});
-	}
-    
+    {
+	    if (_writeTask.IsCompleted is not true)
+	    {
+		    GD.PrintErr("Attempted to start writing from project output, but a write task is already running.");
+		    return;
+	    }
+	    Guard.Against.Null(Project.ProcessStandardIo);
+	    Guard.Against.Null(Project.ProcessStandardIo.OutputReader);
+	    _writeTask = Task.GodotRun(async () =>
+	    {
+		    var reader = Project.ProcessStandardIo.OutputReader;
+		    Guard.Against.Null(reader);
+		    while (true)
+		    {
+			    var result = await reader.ReadAsync();
+			    var buffer = result.Buffer;
+			    foreach (var segment in buffer)
+			    {
+				    _terminal.Write(segment.Span);
+			    }
+			    reader.AdvanceTo(buffer.End);
+			    if (result.IsCompleted) break;
+		    }
+		    await reader.CompleteAsync();
+		    Project.ProcessStandardIo.OutputReadComplete.SetResult();
+	    });
+    }
+
 	public void ClearTerminal()
 	{
 		_terminal.ClearTerminal();

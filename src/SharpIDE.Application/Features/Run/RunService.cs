@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.IO.Pipelines;
 using System.Threading.Channels;
 using Ardalis.GuardClauses;
 using AsyncReadProcess;
@@ -71,6 +72,9 @@ public partial class RunService(ILogger<RunService> logger, RoslynAnalysis rosly
 				Arguments = await GetRunArguments(project),
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
+				RedirectStandardInput = false,
+				UsePty = false,
+				TerminalSize = (80, 24),
 				EnvironmentVariables = []
 			};
 			processStartInfo.EnvironmentVariables["DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION"] = "1";
@@ -95,23 +99,7 @@ public partial class RunService(ILogger<RunService> logger, RoslynAnalysis rosly
 
 			process.Start();
 
-			project.RunningOutputChannel = Channel.CreateUnbounded<byte[]>(new UnboundedChannelOptions
-			{
-				SingleReader = true,
-				SingleWriter = false,
-			});
-			var logsDrained = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-			_ = Task.Run(async () =>
-			{
-				await foreach(var log in process.CombinedOutputChannel.Reader.ReadAllAsync().ConfigureAwait(false))
-				{
-					//var logString = System.Text.Encoding.UTF8.GetString(log, 0, log.Length);
-					//Console.Write(logString);
-					await project.RunningOutputChannel.Writer.WriteAsync(log).ConfigureAwait(false);
-				}
-				project.RunningOutputChannel.Writer.Complete();
-				logsDrained.TrySetResult();
-			});
+			project.ProcessStandardIo = new StandardIo(process.CombinedOutputPipeReader, process.StandardInputPipeWriter);
 
 			if (isDebug)
 			{
@@ -141,7 +129,7 @@ public partial class RunService(ILogger<RunService> logger, RoslynAnalysis rosly
 				await process.WaitForExitAsync().ConfigureAwait(false);
 			}
 
-			await logsDrained.Task.ConfigureAwait(false);
+			await project.ProcessStandardIo.OutputReadComplete.Task.ConfigureAwait(false);
 			project.RunningCancellationTokenSource.Dispose();
 			project.RunningCancellationTokenSource = null;
 			project.Running = false;
