@@ -3,7 +3,19 @@
 [ext_resource type="Script" uid="uid://8o78ti2hb0pu" path="res://Features/TestExplorer/TestExplorerPanel.cs" id="1_b5miy"]
 [ext_resource type="Texture2D" uid="uid://cmwkpdv6pxaai" path="res://Resources/refresh.svg" id="2_4bhqg"]
 [ext_resource type="Texture2D" uid="uid://bkty6563cthj8" path="res://Features/Run/Resources/Run.svg" id="3_b7h3i"]
-[ext_resource type="PackedScene" uid="uid://dt50f2of66dlt" path="res://Features/TestExplorer/TestNodeEntry.tscn" id="3_vj6ii"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vj6ii"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 5.0
+bg_color = Color(0.1, 0.1, 0.1, 0.6)
+draw_center = false
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
 
 [node name="TestExplorerPanel" type="Control" unique_id=1252938737]
 layout_mode = 3
@@ -82,18 +94,13 @@ unique_name_in_owner = true
 layout_mode = 2
 icon = ExtResource("3_b7h3i")
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/MarginContainer2/HSplitContainer/VBoxContainer/HBoxContainer2" unique_id=706651455]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="TestNodesVBoxContainer" type="VBoxContainer" parent="VBoxContainer/MarginContainer2/HSplitContainer/VBoxContainer/HBoxContainer2/ScrollContainer" unique_id=572274104]
+[node name="TestNodesTree" type="Tree" parent="VBoxContainer/MarginContainer2/HSplitContainer/VBoxContainer/HBoxContainer2" unique_id=2049314430]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="TestNodeEntry" parent="VBoxContainer/MarginContainer2/HSplitContainer/VBoxContainer/HBoxContainer2/ScrollContainer/TestNodesVBoxContainer" unique_id=1279479859 instance=ExtResource("3_vj6ii")]
-layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_vj6ii")
+columns = 2
+hide_root = true
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="VBoxContainer/MarginContainer2/HSplitContainer" unique_id=1777548425]
 layout_mode = 2
