@@ -30,7 +30,11 @@ public class TestRunnerService(RoslynAnalysis roslynAnalysis, ILogger<TestRunner
 		List<TestNodeUpdate> testNodeUpdates = [];
 		var discoveryResponse = await clientForProject.DiscoverTestsAsync(Guid.NewGuid(), async nodeUpdates =>
 		{
-			testNodeUpdates.AddRange(nodeUpdates);
+			foreach (var testNodeUpdate in nodeUpdates)
+			{
+				testNodeUpdate.Node.Project = project;
+				testNodeUpdates.Add(testNodeUpdate);
+			}
 			await func(nodeUpdates);
 		});
 		await discoveryResponse.WaitCompletionAsync();
@@ -71,7 +75,14 @@ public class TestRunnerService(RoslynAnalysis roslynAnalysis, ILogger<TestRunner
 	// Assumes it has already been built
 	private async Task RunTestsForProject(TestingPlatformClient clientForProject, SharpIdeProjectModel project, TestNode[] testNodes, Func<TestNodeUpdate[], Task> func)
 	{
-		ResponseListener runRequest = await clientForProject.RunTestsAsync(Guid.NewGuid(), testNodes, func);
+		ResponseListener runRequest = await clientForProject.RunTestsAsync(Guid.NewGuid(), testNodes, async nodeUpdates =>
+		{
+			foreach (var testNodeUpdate in nodeUpdates)
+			{
+				testNodeUpdate.Node.Project = project;
+			}
+			await func(nodeUpdates);
+		});
 		await runRequest.WaitCompletionAsync();
 	}
 

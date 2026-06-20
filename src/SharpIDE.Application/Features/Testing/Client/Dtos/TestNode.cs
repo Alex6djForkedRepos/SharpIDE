@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using SharpIDE.Application.Features.SolutionDiscovery;
 
 namespace SharpIDE.Application.Features.Testing.Client.Dtos;
 
@@ -53,5 +54,9 @@ public sealed record TestNode
 	string? StandardOutput,
 
 	[property: JsonProperty("standardError")]
-	string? StandardError);
+	string? StandardError)
+{
+	// Not serialized or returned by MTP - added by us
+	public SharpIdeProjectModel? Project;
+}
 
