@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Godot;
 using SharpIDE.Application.Features.Analysis;
 using SharpIDE.Application.Features.SolutionDiscovery;
+using SharpIDE.Application.Features.Testing.Client.Dtos;
 
 namespace SharpIDE.Godot;
 
@@ -142,6 +143,7 @@ public static class NodeExtensions
     private static readonly ConditionalWeakTable<TreeItem, ISharpIdeNode> TreeItemSharpIdeNode = [];
     private static readonly ConditionalWeakTable<TreeItem, SharpIdeDiagnostic> TreeItemSharpIdeDiagnostic = [];
     private static readonly ConditionalWeakTable<TreeItem, IDisposable> TreeItemDisposable = [];
+    private static readonly ConditionalWeakTable<TreeItem, TestNode> TreeItemTestNode = [];
     extension(TreeItem treeItem)
     {
         public ISharpIdeNode? SharpIdeNode
@@ -153,6 +155,11 @@ public static class NodeExtensions
         {
             get => TreeItemSharpIdeDiagnostic.TryGetValue(treeItem, out var s) ? s : null;
             set => TreeItemSharpIdeDiagnostic.AddOrUpdateOrRemove(treeItem, value);
+        }
+        public TestNode? SharpIdeTestNode
+        {
+	        get => TreeItemTestNode.TryGetValue(treeItem, out var s) ? s : null;
+	        set => TreeItemTestNode.AddOrUpdateOrRemove(treeItem, value);
         }
         public IDisposable? SharpIdeDisposable
         {

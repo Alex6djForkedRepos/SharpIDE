@@ -21,6 +21,7 @@ public partial class TestExplorerPanel : Control
         _refreshButton = GetNode<Button>("%RefreshButton");
         _testNodesTree = GetNode<Tree>("%TestNodesTree");
         _runAllTestsButton = GetNode<Button>("%RunAllTestsButton");
+        _testNodeCustomDrawCallable = new Callable(this, MethodName.TestNodeCustomDraw);
         _ = Task.GodotRun(AsyncReady);
         _refreshButton.Pressed += OnRefreshButtonPressed;
         _runAllTestsButton.Pressed += OnRunAllTestsButtonPressed;
@@ -64,9 +65,12 @@ public partial class TestExplorerPanel : Control
 
     private void UpdateTestNodeTreeItem(TreeItem treeItem, TestNode testNode)
 	{
-	    treeItem.SetText(0, testNode.DisplayName);
-	    treeItem.SetText(1, testNode.ExecutionState);
-	    treeItem.SetCustomColor(1, GetTextColour(testNode.ExecutionState));
+		treeItem.SetCellMode(0, TreeItem.TreeCellMode.Custom);
+		treeItem.SetCustomAsButton(0, true);
+		treeItem.SetTooltipText(0, testNode.DisplayName);
+		treeItem.SharpIdeTestNode = testNode;
+	    // Avoid allocation via Callable.From((TreeItem s, Rect2 x) => CustomDraw(s, x))
+	    treeItem.SetCustomDrawCallback(0, _testNodeCustomDrawCallable!.Value);
 	}
 
     private readonly Dictionary<string, TreeItem> _testNodeTreeItems = [];
