@@ -1,7 +1,9 @@
 using Godot;
 using SharpIDE.Application.Features.Build;
+using SharpIDE.Application.Features.SolutionDiscovery;
 using SharpIDE.Application.Features.Testing;
 using SharpIDE.Application.Features.Testing.Client.Dtos;
+using SharpIDE.Godot.Features.SolutionExplorer;
 
 namespace SharpIDE.Godot.Features.TestExplorer;
 
@@ -12,6 +14,7 @@ public partial class TestExplorerPanel : Control
 	private Button _runAllTestsButton = null!;
 
 	private readonly Dictionary<string, TreeItem> _testNodeTreeItems = [];
+	private readonly Dictionary<SharpIdeProjectModel, TreeItem> _projectTreeItems = [];
 
 	[Inject] private readonly SharpIdeSolutionAccessor _solutionAccessor = null!;
 	[Inject] private readonly TestRunnerService _testRunnerService = null!;
@@ -52,6 +55,7 @@ public partial class TestExplorerPanel : Control
 			_testNodesTree.Clear();
 			_testNodesTree.CreateItem(); // create a new root
 		});
+		_projectTreeItems.Clear();
 		_testNodeTreeItems.Clear();
 		await _testRunnerService.DiscoverTestsForSolution(solution, HandleTestNodeUpdates);
 	}
@@ -68,6 +72,7 @@ public partial class TestExplorerPanel : Control
 				_testNodesTree.Clear();
 				_testNodesTree.CreateItem(); // create a new root
 			});
+			_projectTreeItems.Clear();
 			_testNodeTreeItems.Clear();
 			await _testRunnerService.RunTestsForSolution(solution, HandleTestNodeUpdates);
 		});
@@ -95,7 +100,20 @@ public partial class TestExplorerPanel : Control
 
 	private TreeItem CreateTestNodeTreeItem(TestNode testNode)
 	{
-		var newTreeItem = _testNodesTree.GetRoot().CreateChild();
+		var project = testNode.Project;
+
+		var projectTreeItem = _projectTreeItems.GetValueOrDefault(project!);
+		if (projectTreeItem is null)
+		{
+			projectTreeItem = _testNodesTree.GetRoot().CreateChild();
+			projectTreeItem.SetText(0, project!.Name.Value);
+			projectTreeItem.SetIcon(0, FileIconHelper.CsprojIcon);
+			_projectTreeItems[project] = projectTreeItem;
+		}
+
+		// Could be e.g. 'TestProject.UnitTest1+NestedClassTests' or 'TestProject.UnitTest1' or 'TestProject.SomeNamespace.UnitTests1'
+		var fullyQualifiedClass = testNode.LocationType;
+		var newTreeItem = projectTreeItem.CreateChild();
 		UpdateTestNodeTreeItem(newTreeItem, testNode);
 		return newTreeItem;
 	}

@@ -5,7 +5,7 @@ namespace SharpIDE.Godot.Features.SolutionExplorer;
 public static class FileIconHelper
 {
     private static readonly Texture2D _warningIcon = ResourceLoader.Load<Texture2D>("uid://pd3h5qfjn8pb");
-    
+
     private static readonly Texture2D _csIcon = ResourceLoader.Load<Texture2D>("uid://do0edciarrnp0");
     private static readonly Texture2D _razorIcon = ResourceLoader.Load<Texture2D>("uid://cff7jlvj2tlg2");
     private static readonly Texture2D _jsonIcon = ResourceLoader.Load<Texture2D>("uid://csrwpjk77r731");
@@ -20,8 +20,8 @@ public static class FileIconHelper
     private static readonly Texture2D _imageFileIcon = ResourceLoader.Load<Texture2D>("uid://73nvtvnx1tie");
     private static readonly Texture2D _fSharpIcon = ResourceLoader.Load<Texture2D>("uid://xa0ntrn7vvbr");
     private static readonly Texture2D _xmlIcon = ResourceLoader.Load<Texture2D>("uid://p5jl3uv51irw");
-    private static readonly Texture2D _csprojIcon = ResourceLoader.Load<Texture2D>("uid://cqt30ma6xgder");
-    
+    public static readonly Texture2D CsprojIcon = ResourceLoader.Load<Texture2D>("uid://cqt30ma6xgder");
+
     private static readonly Texture2D _propsFileOverlayIcon = ResourceLoader.Load<Texture2D>("uid://fa7tdmldi206");
     private static readonly Texture2D _configFileOverlayIcon = ResourceLoader.Load<Texture2D>("uid://brsdisqgeah5n");
     private static readonly Texture2D _targetsFileOverlayIcon = ResourceLoader.Load<Texture2D>("uid://xy5ad1lc24lv");
@@ -46,7 +46,7 @@ public static class FileIconHelper
             ".png" or ".jpg" or ".jpeg" or ".gif" or ".bmp" or ".svg" or ".ico" or ".avif" or ".webp" => _imageFileIcon,
             ".fs" => _fSharpIcon,
             ".xml" or ".nuspec" => _xmlIcon,
-            ".csproj" => _csprojIcon,
+            ".csproj" => CsprojIcon,
             _ => _genericFileIcon
         };
         var overlayTexture = fileExtension switch
@@ -60,7 +60,7 @@ public static class FileIconHelper
         {
             overlayTexture = _unknownFileOverlayIcon;
         }
-        
+
         return (texture, overlayTexture);
     }
 }
