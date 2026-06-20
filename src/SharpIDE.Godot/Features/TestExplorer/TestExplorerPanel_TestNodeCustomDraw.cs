@@ -1,4 +1,5 @@
-﻿using Godot;
+﻿using Ardalis.GuardClauses;
+using Godot;
 using SharpIDE.Application.Features.Testing.Client;
 
 namespace SharpIDE.Godot.Features.TestExplorer;
@@ -13,7 +14,7 @@ public partial class TestExplorerPanel
 		var isSelected = treeItem.IsSelected(0);
 
 		var testNode = treeItem.SharpIdeTestNode;
-		if (testNode is null) return;
+		Guard.Against.Null(testNode);
 
 		var displayName = testNode.LocationMethod;
 		var executionState = testNode.ExecutionState;
