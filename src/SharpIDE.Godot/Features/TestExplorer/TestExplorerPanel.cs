@@ -56,16 +56,6 @@ public partial class TestExplorerPanel : Control
 		await _testRunnerService.DiscoverTestsForSolution(solution, HandleTestNodeUpdates);
 	}
 
-	private void UpdateTestNodeTreeItem(TreeItem treeItem, TestNode testNode)
-	{
-		treeItem.SetCellMode(0, TreeItem.TreeCellMode.Custom);
-		treeItem.SetCustomAsButton(0, true);
-		treeItem.SetTooltipText(0, testNode.DisplayName);
-		treeItem.SharpIdeTestNode = testNode;
-		// Avoid allocation via Callable.From((TreeItem s, Rect2 x) => CustomDraw(s, x))
-		treeItem.SetCustomDrawCallback(0, _testNodeCustomDrawCallable!.Value);
-	}
-
 	private void OnRunAllTestsButtonPressed()
 	{
 		_ = Task.GodotRun(async () =>
@@ -102,5 +92,15 @@ public partial class TestExplorerPanel : Control
 				}
 			}
 		});
+	}
+
+	private void UpdateTestNodeTreeItem(TreeItem treeItem, TestNode testNode)
+	{
+		treeItem.SetCellMode(0, TreeItem.TreeCellMode.Custom);
+		treeItem.SetCustomAsButton(0, true);
+		treeItem.SetTooltipText(0, testNode.DisplayName);
+		treeItem.SharpIdeTestNode = testNode;
+		// Avoid allocation via Callable.From((TreeItem s, Rect2 x) => CustomDraw(s, x))
+		treeItem.SetCustomDrawCallback(0, _testNodeCustomDrawCallable!.Value);
 	}
 }
