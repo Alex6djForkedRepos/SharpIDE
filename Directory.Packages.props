@@ -35,7 +35,6 @@
     <PackageVersion Include="Microsoft.Extensions.ObjectPool" Version="10.0.8" />
     <PackageVersion Include="Microsoft.AspNetCore.Razor.Utilities.Shared" Version="10.4.0-preview.26269.119" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Features" Version="5.8.0-1.26269.119" />
-    <PackageVersion Include="IgnoresAccessChecksToGenerator" Version="0.8.0" />
     <PackageVersion Include="Microsoft.TemplateEngine.IDE" Version="10.0.300" />
     <PackageVersion Include="Microsoft.TemplateSearch.Common" Version="10.0.300" />
     <PackageVersion Include="Microsoft.VisualStudioCode.RazorExtension" Version="10.4.0-preview.26269.119" />
