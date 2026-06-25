@@ -575,6 +575,27 @@ public partial class SharpIdeCodeEdit : CodeEdit
 			AcceptEvent();
 			return;
 		}
+		if (@event.IsActionPressed(InputStringNames.Copy))
+		{
+			if (_symbolInfoRichTextLabel is not null)
+			{
+				var selectedText = _symbolInfoRichTextLabel.GetSelectedText();
+				if (!string.IsNullOrEmpty(selectedText))
+				{
+					AcceptEvent();
+					DisplayServer.ClipboardSet(selectedText);
+				}
+			}
+			else if (_diagnosticInfoRichTextLabel is not null)
+			{
+				var selectedText = _diagnosticInfoRichTextLabel.GetSelectedText();
+				if (!string.IsNullOrEmpty(selectedText))
+				{
+					AcceptEvent();
+					DisplayServer.ClipboardSet(selectedText);
+				}
+			}
+		}
 		if (@event.IsActionPressed(InputStringNames.CodeEditorRemoveLine))
 		{
 			DeleteLines();
@@ -610,7 +631,7 @@ public partial class SharpIdeCodeEdit : CodeEdit
 
 	public override void _UnhandledKeyInput(InputEvent @event)
 	{
-		if (@event is not InputEventKey { Keycode: Key.Ctrl or Key.Alt or Key.Shift or Key.Meta })
+		if (@event is not InputEventKey { Keycode: Key.Ctrl or Key.Alt or Key.Shift or Key.Meta } && @event.IsActionPressed(InputStringNames.Copy) is false && @event.IsActionReleased(InputStringNames.Copy) is false)
 		{
 			CloseSymbolHoverWindow();
 		}

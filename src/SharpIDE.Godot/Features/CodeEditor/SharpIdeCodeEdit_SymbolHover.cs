@@ -8,12 +8,15 @@ namespace SharpIDE.Godot.Features.CodeEditor;
 public partial class SharpIdeCodeEdit
 {
     private Timer? _symbolHoverTimer = null!;
-    
+
+    private RichTextLabel? _symbolInfoRichTextLabel;
+    private RichTextLabel? _diagnosticInfoRichTextLabel;
+
     private void CloseSymbolHoverWindow()
     {
         _symbolHoverTimer?.EmitSignal(Timer.SignalName.Timeout);
     }
-    
+
 	// This method is a bit of a disaster - we create an additional invisible Window, so that the tooltip window doesn't disappear while the mouse is over the hovered symbol
     private async void OnSymbolHovered(string symbol, long line, long column)
     {
@@ -34,7 +37,7 @@ public partial class SharpIdeCodeEdit
         {
             return;
         }
-        
+
         var symbolNameHoverWindow = new Window();
         symbolNameHoverWindow.WrapControls = true;
         symbolNameHoverWindow.Unresizable = true;
@@ -104,6 +107,8 @@ public partial class SharpIdeCodeEdit
             symbolNameHoverWindow.MouseExited -= StartTimer;
             symbolNameHoverWindow.MouseEntered -= StopTimer;
             _symbolHoverTimer = null;
+            _symbolInfoRichTextLabel = null;
+			_diagnosticInfoRichTextLabel = null;
         };
         _symbolHoverTimer = timer;
 
@@ -145,11 +150,13 @@ public partial class SharpIdeCodeEdit
             diagnosticNode.FitContent = true;
             diagnosticNode.AutowrapMode = TextServer.AutowrapMode.Off;
             diagnosticNode.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+            diagnosticNode.SelectionEnabled = true;
             diagnosticPanel = new PanelContainer();
             diagnosticPanel.AddThemeStyleboxOverride(ThemeStringNames.Panel, styleBox);
             diagnosticPanel.AddChild(diagnosticNode);
+            _diagnosticInfoRichTextLabel = diagnosticNode;
         }
-        
+
         var symbolInfoNode = roslynSymbol switch
         {
             IMethodSymbol methodSymbol => SymbolInfoComponents.GetMethodSymbolInfo(methodSymbol),
@@ -174,9 +181,11 @@ public partial class SharpIdeCodeEdit
             symbolInfoNode.FitContent = true;
             symbolInfoNode.AutowrapMode = TextServer.AutowrapMode.Off;
             symbolInfoNode.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+            symbolInfoNode.SelectionEnabled = true;
             symbolInfoPanel = new PanelContainer();
             symbolInfoPanel.AddThemeStyleboxOverride(ThemeStringNames.Panel, styleBox);
             symbolInfoPanel.AddChild(symbolInfoNode);
+            _symbolInfoRichTextLabel = symbolInfoNode;
         }
 
         var vboxContainer = new VBoxContainer();
