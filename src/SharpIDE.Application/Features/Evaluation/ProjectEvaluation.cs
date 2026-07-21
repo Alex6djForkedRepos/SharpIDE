@@ -66,6 +66,11 @@ public static class ProjectEvaluation
 		}
 	}
 
+	public static void ClearLoadedProjects()
+	{
+		_projectCollection.UnloadAllProjects();
+	}
+
 	public static Guid GetOrCreateDotnetUserSecretsId(SharpIdeProjectModel projectModel)
 	{
 		Guard.Against.Null(projectModel, nameof(projectModel));

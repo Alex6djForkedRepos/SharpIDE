@@ -3,6 +3,7 @@ using Godot;
 using Microsoft.Extensions.Logging;
 using SharpIDE.Application.Features.Analysis;
 using SharpIDE.Application.Features.Build;
+using SharpIDE.Application.Features.Evaluation;
 using SharpIDE.Application.Features.Events;
 using SharpIDE.Application.Features.FilePersistence;
 using SharpIDE.Application.Features.FileSystem;
@@ -145,6 +146,7 @@ public partial class IdeRoot : Control
 			GD.Print($"Selected: {path}");
 			var timer = Stopwatch.StartNew();
 			var sharpIdeRootFolder = await FileSystemService.GetSharpIdeRootFolderForSolutionAsync(path);
+			ProjectEvaluation.ClearLoadedProjects();
 			var (solutionModel, vsSln, solutionSerializer) = await SharpIdeSolutionService.ReadSolution(path, sharpIdeRootFolder);
 			timer.Stop();
 			await _nodeReadyTcs.Task;
