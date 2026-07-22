@@ -78,13 +78,17 @@ public partial class RunMenuItem : HBoxContainer
 
     private async void OnStopButtonPressed()
     {
-        await _runService.CancelRunningProject(Project);
+        await StopProject().ConfigureAwait(false);
+    }
+
+    public async Task StopProject()
+    {
+        await _runService.CancelRunningProject(Project).ConfigureAwait(false);
     }
 
     private StringName _buildAnimationName = "BuildingAnimation";
     private async void OnRunButtonPressed()
     {
-        Selected?.Invoke(this);
         await RunProject().ConfigureAwait(false);
     }
 
@@ -96,7 +100,6 @@ public partial class RunMenuItem : HBoxContainer
 
     private async void OnDebugButtonPressed()
     {
-        Selected?.Invoke(this);
         await DebugProject().ConfigureAwait(false);
     }
 

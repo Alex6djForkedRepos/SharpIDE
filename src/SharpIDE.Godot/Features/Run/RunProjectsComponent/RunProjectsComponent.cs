@@ -12,6 +12,7 @@ public partial class RunProjectsComponent : MarginContainer
 	private Button _projectListMenuButton = null!;
 	private Button _runButton = null!;
 	private Button _debugButton = null!;
+	private Button _stopButton = null!;
 	private Popup _runMenuPopup = null!;
 	private VBoxContainer _runMenuPopupVbox = null!;
 	private readonly List<RunMenuItemContainer> _runMenuItemContainers = [];
@@ -27,16 +28,19 @@ public partial class RunProjectsComponent : MarginContainer
 		_projectListMenuButton = GetNode<Button>("%ProjectListMenuButton");
 		_runButton = GetNode<Button>("%RunButton");
 		_debugButton = GetNode<Button>("%DebugButton");
+		_stopButton = GetNode<Button>("%StopButton");
 		_runMenuPopupVbox = _runMenuPopup.GetNode<VBoxContainer>("MarginContainer/VBoxContainer");
 		_runMenuPopup.PopupHide += OnRunMenuPopupHidden;
 		_projectListMenuButton.Pressed += OnProjectListMenuButtonPressed;
 		_runButton.Pressed += OnRunButtonPressed;
 		_debugButton.Pressed += OnDebugButtonPressed;
+		_stopButton.Pressed += OnStopButtonPressed;
 		_ = Task.GodotRun(AsyncReady);
 	}
 
 	public override void _ExitTree()
 	{
+		UnsubscribeFromActiveProjectRunState();
 		_activeProjectNameSubscription?.Dispose();
 		foreach (var container in _runMenuItemContainers)
 		{
@@ -141,6 +145,7 @@ public partial class RunProjectsComponent : MarginContainer
 	[RequiresGodotUiThread]
 	private void SetActiveRunMenuItem(RunMenuItemContainer? container)
 	{
+		UnsubscribeFromActiveProjectRunState();
 		_activeProjectNameSubscription?.Dispose();
 		_activeProjectNameSubscription = null;
 		_activeRunMenuItemContainer = container;
@@ -148,9 +153,11 @@ public partial class RunProjectsComponent : MarginContainer
 		if (container?.MenuItem is not { } menuItem)
 		{
 			_projectListMenuButton.Text = "No runnable projects";
+			UpdateRunMenuButton();
 			return;
 		}
 
+		SubscribeToActiveProjectRunState();
 		_projectListMenuButton.Text = menuItem.Project.Name.Value;
 		_activeProjectNameSubscription = menuItem.Project.Name.Skip(1).SubscribeOnThreadPool().ObserveOnThreadPool()
 			.SubscribeAwait(async (name, ct) => await this.InvokeAsync(() =>
@@ -158,15 +165,43 @@ public partial class RunProjectsComponent : MarginContainer
 				if (_activeRunMenuItemContainer == container)
 					_projectListMenuButton.Text = name;
 			}), configureAwait: false);
+		UpdateRunMenuButton();
+	}
+
+	private void SubscribeToActiveProjectRunState()
+	{
+		if (_activeRunMenuItemContainer?.MenuItem?.Project is not { } project) return;
+		project.ProjectStartedRunning.Subscribe(OnActiveProjectRunStateChanged);
+		project.ProjectStoppedRunning.Subscribe(OnActiveProjectRunStateChanged);
+		project.ProjectRunFailed.Subscribe(OnActiveProjectRunStateChanged);
+	}
+
+	private void UnsubscribeFromActiveProjectRunState()
+	{
+		if (_activeRunMenuItemContainer?.MenuItem?.Project is not { } project) return;
+		project.ProjectStartedRunning.Unsubscribe(OnActiveProjectRunStateChanged);
+		project.ProjectStoppedRunning.Unsubscribe(OnActiveProjectRunStateChanged);
+		project.ProjectRunFailed.Unsubscribe(OnActiveProjectRunStateChanged);
+	}
+
+	private async Task OnActiveProjectRunStateChanged()
+	{
+		await this.InvokeAsync(UpdateRunMenuButton);
 	}
 
 	[RequiresGodotUiThread]
 	private void UpdateRunMenuButton()
 	{
 		_projectListMenuButton.Disabled = _runMenuItemContainers.All(s => s.MenuItem is null);
-		var disabled = _activeRunMenuItemContainer?.MenuItem is null;
-		_runButton.Disabled = disabled;
-		_debugButton.Disabled = disabled;
+		var activeProject = _activeRunMenuItemContainer?.MenuItem?.Project;
+		var hasActiveProject = activeProject is not null;
+		var isRunning = activeProject?.Running is true;
+		_runButton.Visible = !isRunning;
+		_debugButton.Visible = !isRunning;
+		_stopButton.Visible = isRunning;
+		_runButton.Disabled = !hasActiveProject;
+		_debugButton.Disabled = !hasActiveProject;
+		_stopButton.Disabled = !isRunning;
 		if (_projectListMenuButton.Disabled)
 			_runMenuPopup.Hide();
 	}
@@ -201,6 +236,12 @@ public partial class RunProjectsComponent : MarginContainer
 	{
 		if (_activeRunMenuItemContainer?.MenuItem is { } menuItem)
 			await menuItem.DebugProject().ConfigureAwait(false);
+	}
+
+	private async void OnStopButtonPressed()
+	{
+		if (_activeRunMenuItemContainer?.MenuItem is { } menuItem)
+			await menuItem.StopProject().ConfigureAwait(false);
 	}
 
 	private sealed class RunMenuItemContainer

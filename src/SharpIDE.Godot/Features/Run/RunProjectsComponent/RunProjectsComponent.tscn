@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://bkty6563cthj8" path="res://Features/Run/Resources/Run.svg" id="1_ir76l"]
 [ext_resource type="Script" uid="uid://btpyvql7ky3t8" path="res://Features/Run/RunProjectsComponent/RunProjectsComponent.cs" id="1_pce8v"]
 [ext_resource type="Texture2D" uid="uid://c7cmou8hipsvc" path="res://Features/Run/Resources/Debug.svg" id="3_p3s3k"]
+[ext_resource type="Texture2D" uid="uid://debdmtqgw5dhf" path="res://Features/Run/Resources/Stop.svg" id="4_k3crf"]
 
 [node name="RunProjectsComponent" type="MarginContainer" unique_id=1780495061]
 size_flags_vertical = 4
@@ -50,4 +51,13 @@ layout_mode = 2
 size_flags_vertical = 4
 disabled = true
 icon = ExtResource("3_p3s3k")
+icon_alignment = 1
+
+[node name="StopButton" type="Button" parent="HBoxContainer" unique_id=1078243282]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+disabled = true
+icon = ExtResource("4_k3crf")
 icon_alignment = 1
