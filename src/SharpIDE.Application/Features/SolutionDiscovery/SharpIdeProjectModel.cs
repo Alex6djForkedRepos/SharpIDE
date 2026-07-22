@@ -38,11 +38,13 @@ public class SharpIdeProjectModel : ISharpIdeNode, IExpandableSharpIdeNode, IChi
 		Folder = sharpIdeRootFolder.GetFolderForProject(projectModel.FullFilePath);
 		ActiveMsBuildProjectLoadState = new ReactiveProperty<MsBuildProjectLoadState>(Evaluation.MsBuildProjectLoadState.Loading);
 		MsBuildEvaluationProjectTask = LoadOrReloadProjectInMsBuild();
+		ActiveMsBuildEvaluationProject = null!;
 		allProjects.Add(this);
 	}
 
 	public async Task<MsBuildProjectLoadResult> LoadOrReloadProjectInMsBuild()
 	{
+		ActiveMsBuildEvaluationProject = null!;
 		return await Task.Run(async () =>
 		{
 			if (Folder is null)
@@ -68,12 +70,20 @@ public class SharpIdeProjectModel : ISharpIdeNode, IExpandableSharpIdeNode, IChi
 			}
 
 			ActiveMsBuildProjectLoadState.Value = result.DefaultActiveProjectLoadResult.LoadState;
-
+			ActiveMsBuildEvaluationProject = result.DefaultActiveProjectLoadResult.Project!;
 			return result;
 		});
 	}
 
-	public Project ActiveMsBuildEvaluationProject => MsBuildEvaluationProjectTask.IsCompletedSuccessfully && MsBuildEvaluationProjectTask.Result.DefaultActiveProjectLoadResult is { LoadState: MsBuildProjectLoadState.Loaded } loadResult ? loadResult.Project! : throw new InvalidOperationException("Do not attempt to access the MsBuildEvaluationProject before it has been loaded");
+	public Project ActiveMsBuildEvaluationProject
+	{
+		get
+		{
+			if (MsBuildEvaluationProjectTask.IsCompletedSuccessfully is false) throw new InvalidOperationException("Do not attempt to access the MsBuildEvaluationProject before it has been loaded");
+			return field;
+		}
+		set;
+	}
 
 	public bool IsLoading => ActiveMsBuildProjectLoadState.Value is Evaluation.MsBuildProjectLoadState.Loading;
 	public bool IsLoaded => ActiveMsBuildProjectLoadState.Value is Evaluation.MsBuildProjectLoadState.Loaded;
